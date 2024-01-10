@@ -136,17 +136,6 @@ void Controller::updateStats(void)
 
 void Controller::requestReceived(Request &request)
 {
-    if (request.url() == "/logo.png")
-    {
-        QFile file(QString("%1/logo.png").arg(m_path.constData()));
-
-        if (file.open(QFile::ReadOnly))
-        {
-            m_http->sendResponse(request, 200, {{"Content-Type", "image/png"}}, file.readAll());
-            file.close();
-            return;
-        }
-    }
     if (request.url() == "/telegram")
     {
         QJsonObject json = QJsonDocument::fromJson(request.body().toUtf8()).object().value("message").toObject(), chat = json.value("chat").toObject(), from = json.value("from").toObject();
@@ -267,6 +256,17 @@ void Controller::requestReceived(Request &request)
 
         m_http->sendResponse(request, 200);
         return;
+    }
+    else if (request.url() == "/logo.png")
+    {
+        QFile file(QString("%1/logo.png").arg(m_path.constData()));
+
+        if (file.open(QFile::ReadOnly))
+        {
+            m_http->sendResponse(request, 200, {{"Content-Type", "image/png"}}, file.readAll());
+            file.close();
+            return;
+        }
     }
     else if (request.url() == "/login")
     {
@@ -655,7 +655,7 @@ void Controller::newConnection(void)
     connect(client, &Client::dataUpdated, this, &Controller::dataUpdated);
 }
 
-void Controller::disconnected()
+void Controller::disconnected(void)
 {
     Client *client = reinterpret_cast <Client*> (sender());
 
@@ -729,6 +729,5 @@ void Controller::dataUpdated(const Endpoint &endpoint, const QList <Capability> 
 
         json.insert("payload", QJsonObject {{"user_id", user->name().constData()}, {"devices", QJsonArray {QJsonObject {{"id", id}, {"capabilities", capabilities}, {"properties", properties}}}}});
         system(QString("curl -i -s -X POST https://dialogs.yandex.net/api/v1/skills/%1/callback/state -H 'Authorization: OAuth %2' -H 'Content-Type: application/json' -d '%3' > /dev/null &").arg(m_skillId, m_skillToken, QJsonDocument(json).toJson(QJsonDocument::Compact).constData()).toUtf8().constData());
-
     }
 }

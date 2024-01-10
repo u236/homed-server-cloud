@@ -208,11 +208,10 @@ void Client::parseExposes(const Endpoint &endpoint, const QList <QVariant> &expo
     if (endpoint->type().isEmpty())
         return;
 
-    if (exposes.contains("batteryLow"))
-        endpoint->properties().insert("batteryLow", Property(new Properties::Binary("battery_level", "low", "normal")));
-
     if (exposes.contains("battery"))
         endpoint->properties().insert("battery", Property(new Properties::Battery));
+    else if (exposes.contains("batteryLow"))
+        endpoint->properties().insert("batteryLow", Property(new Properties::Binary("battery_level", "low", "normal")));
 }
 
 void Client::sendRequest(const QString &action, const QString &topic, const QJsonObject &message)
