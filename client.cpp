@@ -243,12 +243,12 @@ void Client::sendRequest(const QString &action, const QString &topic, const QJso
     m_socket->write(packet.append(0x43));
 }
 
-void Client::parseData(void)
+void Client::parseData(QByteArray &buffer)
 {
     QJsonObject json;
 
-    m_aes->cbcDecrypt(m_buffer);
-    json = QJsonDocument::fromJson(m_buffer.constData()).object();
+    m_aes->cbcDecrypt(buffer);
+    json = QJsonDocument::fromJson(buffer.constData()).object();
 
     if (m_status == Status::Authorization)
     {
@@ -413,24 +413,24 @@ void Client::parseData(void)
 
 void Client::readyRead(void)
 {
-    QByteArray buffer = m_socket->readAll();
+    QByteArray data = m_socket->readAll();
 
     if (m_status == Status::Handshake)
     {
-        handshakeRequest data;
+        handshakeRequest hanshake;
         QByteArray hash;
         quint32 value, key;
         DH dh;
 
-        memcpy(&data, buffer.constData(), sizeof(data));
+        memcpy(&hanshake, data.constData(), sizeof(hanshake));
 
-        dh.setPrime(qFromBigEndian(data.prime));
-        dh.setGenerator(qFromBigEndian(data.generator));
+        dh.setPrime(qFromBigEndian(hanshake.prime));
+        dh.setGenerator(qFromBigEndian(hanshake.generator));
 
         value = qToBigEndian(dh.sharedKey());
         m_socket->write(QByteArray(reinterpret_cast <char*> (&value), sizeof(value)));
 
-        key = qToBigEndian(dh.privateKey(qFromBigEndian(data.sharedKey)));
+        key = qToBigEndian(dh.privateKey(qFromBigEndian(hanshake.sharedKey)));
         hash = QCryptographicHash::hash(QByteArray(reinterpret_cast <char*> (&key), sizeof(key)), QCryptographicHash::Md5);
 
         m_aes->init(hash, QCryptographicHash::hash(hash, QCryptographicHash::Md5));
@@ -438,27 +438,25 @@ void Client::readyRead(void)
     }
     else
     {
-        for (int i = 0; i < buffer.length(); i++)
+        QByteArray buffer;
+        int length;
+
+        m_buffer.append(data); // TODO: check for overflow
+
+        while((length = m_buffer.indexOf(0x43)) > 0)
         {
-            switch (buffer.at(i))
+            for (int i = 0; i < length; i++)
             {
-                case 0x42: m_buffer.clear(); break;
-                case 0x43: parseData(); break;
-
-                case 0x44:
-
-                    switch (buffer.at(++i))
-                    {
-                        case 0x62: m_buffer.append(0x42); break;
-                        case 0x63: m_buffer.append(0x43); break;
-                        case 0x64: m_buffer.append(0x44); break;
-                        default: qWarning() << QString::asprintf("Unknown escape sequence 0x%02X at position %d in received packet:", buffer.at(i), i) << buffer.toHex(':'); return;
-                    }
-
-                    break;
-
-                default: m_buffer.append(buffer.at(i)); break;
+                switch (m_buffer.at(i))
+                {
+                    case 0x42: buffer.clear(); break;
+                    case 0x44: buffer.append(m_buffer.at(++i) & 0xDF); break;
+                    default:   buffer.append(m_buffer.at(i)); break;
+                }
             }
+
+            m_buffer.remove(0, length + 1);
+            parseData(buffer);
         }
     }
 }

@@ -113,7 +113,7 @@ private:
     void parseExposes(const Endpoint &endpoint, const QList<QVariant> &exposes, const QMap <QString, QVariant> &options);
 
     void sendRequest(const QString &action, const QString &topic, const QJsonObject &message = QJsonObject());
-    void parseData(void);
+    void parseData(QByteArray &buffer);
 
 private slots:
 
