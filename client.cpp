@@ -452,6 +452,7 @@ void Client::readyRead(void)
                         case 0x62: m_buffer.append(0x42); break;
                         case 0x63: m_buffer.append(0x43); break;
                         case 0x64: m_buffer.append(0x44); break;
+                        default: qWarning() << QString::asprintf("Unknown escape sequence 0x%02X at position %d in received packet:", buffer.at(i), i) << buffer.toHex(':'); return;
                     }
 
                     break;
