@@ -6,6 +6,8 @@
 
 Client::Client(QTcpSocket *socket) : QObject(nullptr), m_socket(socket), m_timer(new QTimer(this)), m_aes(new AES128), m_status(Status::Handshake)
 {
+    m_services = {"zigbee", "modbus", "custom"};
+
     connect(m_socket, &QTcpSocket::readyRead, this, &Client::readyRead);
     connect(m_socket, &QTcpSocket::disconnected, this, &Client::disconnected);
     connect(m_timer, &QTimer::timeout, this, &Client::timeout);
@@ -261,32 +263,48 @@ void Client::parseData(QByteArray &buffer)
             return;
         }
 
-        m_timer->stop();
-        m_status = Status::Ready;
+        for (int i = 0; i < m_services.count(); i++)
+            sendRequest("subscribe", QString("status/").append(m_services.at(i)));
 
-        // TODO: subscribe others here
-        sendRequest("subscribe", "status/zigbee");
+        m_status = Status::Ready;
+        m_timer->stop();
     }
     else
     {
         QJsonObject message = json.value("message").toObject();
         QString topic = json.value("topic").toString();
 
-        if (topic == "status/zigbee")
+        if (topic.startsWith("status/"))
         {
+            QList <QString> list = topic.split('/');
             QMap <QString, Device> map;
             QJsonArray devices = message.value("devices").toArray();
-            bool names = message.value("names").toBool(), check = false;
+            QString service = list.value(1);
+            bool check = false;
 
-            // TODO: refactor this
             for (auto it = devices.begin(); it != devices.end(); it++)
             {
                 QJsonObject device = it->toObject();
-                QString name = device.value("name").toString(), id = QString("zigbee/").append(names ? name : device.value("ieeeAddress").toString());
+                QString name = device.value("name").toString(), id;
 
-                if (name.isEmpty() || !device.value("logicalType").toInt())
+                if (name.isEmpty())
                     continue;
-                
+
+                switch (m_services.indexOf(service))
+                {
+                    case 0: // zigbee
+                        id = QString("zigbee/%1").arg(message.value("names").toBool() ? name : device.value("ieeeAddress").toString());
+                        break;
+
+                    case 1: // modbus
+                        // id = QString("modbus/%1.%2").arg(device.value("portId").toInt()).arg(device.value("slaveId").toInt());
+                        continue;
+
+                    case 2: // custom
+                        id = QString("custom/%1").arg(device.contains("id") ? device.value("id").toString() : name);
+                        break;
+                }
+
                 map.insert(id, Device(new DeviceObject(id, name)));
             }
 
@@ -310,6 +328,9 @@ void Client::parseData(QByteArray &buffer)
 
             for (auto it = m_devices.begin(); it != m_devices.end(); it++)
             {
+                if (it.key().split('/').value(0) != service)
+                    continue;
+
                 if (!map.contains(it.key()))
                 {
                     m_devices.erase(it++);
@@ -325,7 +346,7 @@ void Client::parseData(QByteArray &buffer)
 
             emit devicesUpdated();
         }
-        else if (topic.startsWith("device/zigbee/"))
+        else if (topic.startsWith("device/"))
         {
             QList list = topic.split('/');
             Device device = m_devices.value(QString("%1/%2").arg(list.value(1), list.value(2)));
@@ -335,7 +356,7 @@ void Client::parseData(QByteArray &buffer)
 
             device->setAvailable(message.value("status").toString() == "online" ? true : false);
         }
-        else if (topic.startsWith("expose/zigbee/"))
+        else if (topic.startsWith("expose/"))
         {
             QList list = topic.split('/');
             Device device = m_devices.value(QString("%1/%2").arg(list.value(1), list.value(2)));
@@ -362,7 +383,7 @@ void Client::parseData(QByteArray &buffer)
                 m_subscriptions.append(subscription);
             }
 
-            sendRequest("publish", "command/zigbee", {{"action", "getProperties"}, {"device", device->name()}});
+            sendRequest("publish", QString("command/").append(list.value(1)), {{"action", "getProperties"}, {"device", device->name()}});
         }
         else if (topic.startsWith("fd/"))
         {

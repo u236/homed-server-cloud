@@ -107,7 +107,7 @@ private:
     Status m_status;
     QString m_uniqueId;
 
-    QList <QString> m_subscriptions;
+    QList <QString> m_services, m_subscriptions;
     QMap <QString, Device> m_devices;
 
     void parseExposes(const Endpoint &endpoint, const QList<QVariant> &exposes, const QMap <QString, QVariant> &options);
