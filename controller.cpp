@@ -529,7 +529,13 @@ void Controller::requestReceived(Request &request)
             {
                 const Device &device = client->devices().value(QString("%1/%2").arg(list.value(1), list.value(2)));
 
-                if (!device.isNull() && device->available())
+                if (device.isNull())
+                {
+                    devices.append(QJsonObject {{"id", id}, {"error_code", "DEVICE_NOT_FOUND"}});
+                    continue;
+                }
+
+                if (device->available())
                 {
                     const Endpoint &endpoint = device->endpoints().value(static_cast <quint8> (list.value(3).toInt()));
                     QJsonArray capabilities, properties;
@@ -658,12 +664,10 @@ void Controller::newConnection(void)
 void Controller::disconnected(void)
 {
     Client *client = reinterpret_cast <Client*> (sender());
+    UserObject *user = reinterpret_cast <UserObject*> (client->parent());
 
-    if (client->parent())
-        reinterpret_cast <UserObject*> (client->parent())->clients().remove(client->uniqueId());
-
-    if (m_debug)
-        qDebug() << client << "disconnected";
+    if (user)
+        qDebug() << "Client" << QString("%1:%2").arg(user->name(), client->uniqueId()) << "disconnected";
 
     client->deleteLater();
 }
@@ -677,7 +681,7 @@ void Controller::tokenReceived(const QByteArray &token)
         if (it.value()->clientToken() != token)
             continue;
 
-        qDebug() << client << "user is" << it.value()->name() << "and unique id is" << client->uniqueId();
+        qDebug() << "Client" << QString("%1:%2").arg(it.value()->name(), client->uniqueId()) << "authorized";
         client->setParent(it.value().data());
         it.value()->clients().insert(client->uniqueId(), client);
         break;
