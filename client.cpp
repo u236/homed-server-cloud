@@ -287,7 +287,7 @@ void Client::parseData(QByteArray &buffer)
                 QJsonObject device = it->toObject();
                 QString name = device.value("name").toString(), id;
 
-                if (name.isEmpty())
+                if (name.isEmpty() || !device.value("active").toBool(true) || !device.value("cloud").toBool(true))
                     continue;
 
                 switch (m_services.indexOf(service))
