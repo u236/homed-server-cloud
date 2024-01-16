@@ -555,10 +555,11 @@ void Controller::requestReceived(Request &request)
                     }
 
                     devices.append(QJsonObject {{"id", id}, {"capabilities", capabilities}, {"properties", properties}});
+                    continue;
                 }
-                else
-                    devices.append(QJsonObject {{"id", id}, {"error_code", "DEVICE_UNREACHABLE"}});
             }
+
+            devices.append(QJsonObject {{"id", id}, {"error_code", "DEVICE_UNREACHABLE"}});
         }
 
         json = {{"request_id", request.headers().value("X-Request-Id")}, {"payload", QJsonObject {{"devices", devices}}}};
@@ -603,7 +604,13 @@ void Controller::requestReceived(Request &request)
             {
                 const Device &device = client->devices().value(QString("%1/%2").arg(list.value(1), list.value(2)));
 
-                if (!device.isNull() && device->available())
+                if (device.isNull())
+                {
+                    devices.append(QJsonObject {{"id", action.value("id")}, {"action_result", QJsonObject {{"status", "ERROR"}, {"error_code", "DEVICE_NOT_FOUND"}}}});
+                    continue;
+                }
+
+                if (device->available())
                 {
                     const Endpoint &endpoint = device->endpoints().value(static_cast <quint8> (list.value(3).toInt()));
 
@@ -627,10 +634,16 @@ void Controller::requestReceived(Request &request)
                             }
                         }
                     }
+
+                    if (check)
+                    {
+                        devices.append(QJsonObject {{"id", action.value("id")}, {"action_result", QJsonObject {{"status", "DONE"}}}});
+                        continue;
+                    }
                 }
             }
 
-            devices.append(QJsonObject {{"id", action.value("id")}, {"action_result", check ? QJsonObject {{"status", "DONE"}} : QJsonObject {{"status", "ERROR"}, {"error_code", "DEVICE_UNREACHABLE"}}}});
+            devices.append(QJsonObject {{"id", action.value("id")}, {"action_result", QJsonObject {{"status", "ERROR"}, {"error_code", "DEVICE_UNREACHABLE"}}}});
         }
 
         json = {{"request_id", request.headers().value("X-Request-Id")}, {"payload", QJsonObject {{"devices", devices}}}};
