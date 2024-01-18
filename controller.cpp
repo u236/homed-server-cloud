@@ -2,7 +2,7 @@
 #include <QRandomGenerator>
 #include "controller.h"
 
-Controller::Controller(QObject *parent) : QObject(parent), m_db(QSqlDatabase::addDatabase("QSQLITE")), m_settings(new QSettings("/etc/homed/homed-cloud-server.conf", QSettings::IniFormat, this)), m_codeTimer(new QTimer(this)), m_statsTimer(new QTimer(this)), m_server(new QTcpServer(this)), m_http(new HTTP(m_settings, this)), m_aes(new AES128)
+Controller::Controller(QObject *parent) : QObject(parent), m_db(QSqlDatabase::addDatabase("QSQLITE")), m_settings(new QSettings("/etc/homed/homed-cloud-server.conf", QSettings::IniFormat, this)), m_codeTimer(new QTimer(this)), m_statsTimer(new QTimer(this)), m_server(new QTcpServer(this)), m_http(new HTTP(m_settings, this)), m_aes(new AES128), m_apiCount(0), m_eventCount(0)
 {
     QSqlQuery query(m_db);
 
@@ -132,6 +132,15 @@ void Controller::updateStats(void)
 
     system(QString("rrdcreate %1/client.rrd --no-overwrite --step 10 DS:data:GAUGE:3600:U:U RRA:AVERAGE:0.5:1:8640 RRA:AVERAGE:0.5:60:1008 RRA:AVERAGE:0.5:360:744 RRA:AVERAGE:0.5:2160:1460 > /dev/null &").arg(m_rrdPath.constData()).toUtf8());
     system(QString("rrdupdate %1/client.rrd %2:%3 > /dev/null &").arg(m_rrdPath.constData()).arg(time - time % 10).arg(clients).toUtf8());
+
+    system(QString("rrdcreate %1/api.rrd --no-overwrite --step 10 DS:data:GAUGE:3600:U:U RRA:AVERAGE:0.5:1:8640 RRA:AVERAGE:0.5:60:1008 RRA:AVERAGE:0.5:360:744 RRA:AVERAGE:0.5:2160:1460 > /dev/null &").arg(m_rrdPath.constData()).toUtf8());
+    system(QString("rrdupdate %1/api.rrd %2:%3 > /dev/null &").arg(m_rrdPath.constData()).arg(time - time % 10).arg(m_apiCount).toUtf8());
+
+    system(QString("rrdcreate %1/event.rrd --no-overwrite --step 10 DS:data:GAUGE:3600:U:U RRA:AVERAGE:0.5:1:8640 RRA:AVERAGE:0.5:60:1008 RRA:AVERAGE:0.5:360:744 RRA:AVERAGE:0.5:2160:1460 > /dev/null &").arg(m_rrdPath.constData()).toUtf8());
+    system(QString("rrdupdate %1/event.rrd %2:%3 > /dev/null &").arg(m_rrdPath.constData()).arg(time - time % 10).arg(m_eventCount).toUtf8());
+
+    m_apiCount = 0;
+    m_eventCount = 0;
 }
 
 void Controller::requestReceived(Request &request)
@@ -498,6 +507,7 @@ void Controller::requestReceived(Request &request)
             qDebug() << user->name() << "devices data" << QJsonDocument(json).toJson(QJsonDocument::Compact).constData();
 
         m_http->sendResponse(request, 200, {{"Content-Type", "application/json"}}, QJsonDocument(json).toJson(QJsonDocument::Compact));
+        m_apiCount++;
         return;
     }
     else if (request.url() == "/api/v1.0/user/devices/query")
@@ -571,6 +581,7 @@ void Controller::requestReceived(Request &request)
         }
 
         m_http->sendResponse(request, 200, {{"Content-Type", "application/json"}}, QJsonDocument(json).toJson(QJsonDocument::Compact));
+        m_apiCount++;
         return;
     }
     else if (request.url() == "/api/v1.0/user/devices/action")
@@ -655,6 +666,7 @@ void Controller::requestReceived(Request &request)
         }
 
         m_http->sendResponse(request, 200, {{"Content-Type", "application/json"}}, QJsonDocument(json).toJson(QJsonDocument::Compact));
+        m_apiCount++;
         return;
     }
 
@@ -710,6 +722,7 @@ void Controller::devicesUpdated(void)
     {
         QJsonObject json = {{"ts", QDateTime::currentSecsSinceEpoch()}, {"payload", QJsonObject {{"user_id", user->name().constData()}}}};
         system(QString("curl -i -s -X POST https://dialogs.yandex.net/api/v1/skills/%1/callback/discovery -H 'Authorization: OAuth %2' -H 'Content-Type: application/json' -d '%3' > /dev/null &").arg(m_skillId, m_skillToken, QJsonDocument(json).toJson(QJsonDocument::Compact).constData()).toUtf8().constData());
+        m_eventCount++;
     }
 }
 
@@ -746,5 +759,6 @@ void Controller::dataUpdated(const Endpoint &endpoint, const QList <Capability> 
 
         json.insert("payload", QJsonObject {{"user_id", user->name().constData()}, {"devices", QJsonArray {QJsonObject {{"id", id}, {"capabilities", capabilities}, {"properties", properties}}}}});
         system(QString("curl -i -s -X POST https://dialogs.yandex.net/api/v1/skills/%1/callback/state -H 'Authorization: OAuth %2' -H 'Content-Type: application/json' -d '%3' > /dev/null &").arg(m_skillId, m_skillToken, QJsonDocument(json).toJson(QJsonDocument::Compact).constData()).toUtf8().constData());
+        m_eventCount++;
     }
 }
