@@ -42,7 +42,7 @@ QJsonObject Capabilities::Switch::action(const QJsonObject &json)
 Capabilities::Brightness::Brightness(void) : CapabilityObject("devices.capabilities.range")
 {
     m_parameters.insert("instance", "brightness");
-    m_parameters.insert("range", QMap <QString, QVariant> {{"min", 0}, {"max", 100}});
+    m_parameters.insert("range", QMap <QString, QVariant> {{"min", 1}, {"max", 100}});
     m_parameters.insert("unit", "unit.percent");
 
     m_data.insert("level", QVariant());
