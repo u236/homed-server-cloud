@@ -100,7 +100,13 @@ namespace Capabilities
 
     private:
 
+        struct RGB { int r, g, b; };
+
         bool m_rgb;
+        QMap <int, int> m_colors;
+
+        RGB parse(int value);
+        int distance(RGB a, RGB b);
 
     };
 

@@ -63,6 +63,27 @@ Capabilities::Color::Color(const QMap <QString, QVariant> &options) : Capability
 {
     QList <QVariant> list = options.value("light").toList();
 
+    m_colors =
+    {
+        {16714250, 16711680}, // Red*
+        {16729907, 16729907}, // Coral
+        {16727040, 16727040}, // Orange
+        {16740362, 16740362}, // Yellow
+        {13303562, 13303562}, // Lime
+        {720711,   65280},    // Green*
+        {720813,   720813},   // Emerald
+        {720883,   720883},   // Turquoise
+        {710399,   65535},    // Cyan*
+        {673791,   255},      // Blue*
+        {15067647, 15067647}, // Moonlight
+        {8719103,  8719103},  // Lavender
+        {11340543, 11340543}, // Violet
+        {16714471, 16714471}, // Purple
+        {16714393, 16714393}, // Orchid
+        {16722742, 16722742}, // Mauve
+        {16711765, 16711765}  // Raspberry
+    };
+
     if (list.contains("color"))
     {
         m_parameters.insert("color_model", "rgb");
@@ -100,7 +121,18 @@ QJsonObject Capabilities::Color::state(void)
     if (m_rgb)
     {
         QList <QVariant> list = m_data.value("color").toList();
-        return QJsonObject {{"instance", "rgb"}, {"value", list.value(0).toInt() << 16 | list.value(1).toInt() << 8 | list.value(2).toInt()}};
+        int value = list.value(0).toInt() << 16 | list.value(1).toInt() << 8 | list.value(2).toInt();
+
+        for (auto it = m_colors.begin(); it != m_colors.end(); it++)
+        {
+            if (distance(parse(it.value()), parse(value)) < 20)
+            {
+                value = it.key();
+                break;
+            }
+        }
+
+        return QJsonObject {{"instance", "rgb"}, {"value", value}};
     }
     else
     {
@@ -116,13 +148,29 @@ QJsonObject Capabilities::Color::action(const QJsonObject &json)
     if (m_rgb)
     {
         int value = json.value("value").toInt();
-        return {{"color", QJsonArray {value >> 16 & 0xFF, value >> 8 & 0xFF, value & 0xFF}}};
+        RGB rgb;
+
+        if (m_colors.contains(value))
+            value = m_colors.value(value);
+
+        rgb = parse(value);
+        return {{"color", QJsonArray {rgb.r, rgb.g, rgb.b}}};
     }
     else
     {
         double value = 1e6 / json.value("value").toDouble();
         return {{"colorTemperature", round(json.value("relative").toBool() ? m_data.value("colorTemperature").toDouble() + value : value)}};
     }
+}
+
+Capabilities::Color::RGB Capabilities::Color::parse(int value)
+{
+    return {value >> 16 & 0xFF, value >> 8 & 0xFF, value & 0xFF};
+}
+
+int Capabilities::Color::distance(RGB a, RGB b)
+{
+    return abs(sqrt(pow(a.r - b.r, 2) + pow(a.g - b.g, 2) + pow(a.b - b.b, 2)));
 }
 
 Capabilities::Curtain::Curtain(void) : CapabilityObject("devices.capabilities.on_off")
