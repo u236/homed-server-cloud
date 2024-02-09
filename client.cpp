@@ -31,6 +31,11 @@ void Client::publish(const Endpoint &endpoint, const QJsonObject &json)
     sendRequest("publish", topic, json);
 }
 
+void Client::close(void)
+{
+    m_socket->close();
+}
+
 void Client::parseExposes(const Endpoint &endpoint, const QList <QVariant> &exposes, const QMap <QString, QVariant> &options)
 {
     // basic
@@ -484,5 +489,5 @@ void Client::readyRead(void)
 
 void Client::timeout(void)
 {
-    m_socket->close();
+    close();
 }

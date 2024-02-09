@@ -89,6 +89,7 @@ public:
     inline QMap <QString, Device> &devices(void) { return m_devices; }
 
     void publish(const Endpoint &endpoint, const QJsonObject &json);
+    void close(void);
 
 private:
 
