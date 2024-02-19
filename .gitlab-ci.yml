@@ -1,9 +1,20 @@
-Build Linux Binary (amd64):
-  variables:
-    NAME: homed-cloud-server
-    QT_BUILD: qt-amd64-linux-5.15.4-shared
+variables:
+  NAME: homed-cloud-server
+  QT_BUILD: qt-amd64-linux-5.15.4-shared
+
+Build:
+  stage: build
   script:
   - "docker run --rm -u ${UID}:${UID} -v /opt/qt/${QT_BUILD}:/opt/qt/${QT_BUILD} -v ${PWD}/..:/build -w /build/${NAME} gcc:10.5.0 bash -c \"/opt/qt/${QT_BUILD}/bin/qmake ${NAME}.pro; make -j $(nproc)\""
   artifacts:
     paths:
     - ${NAME}
+
+Deploy:
+  stage: deploy
+  script:
+  - mkdir -p ~/.ssh
+  - echo -e "Host *\n\tStrictHostKeyChecking no\n" > ~/.ssh/config
+  - eval $(ssh-agent -s)
+  - ssh-add <(echo "$SSH_KEY")
+  - scp ${NAME} $SSH_USER@$SSH_HOST:$SSH_PATH
