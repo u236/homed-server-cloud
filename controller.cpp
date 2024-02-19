@@ -707,10 +707,6 @@ void Controller::tokenReceived(const QByteArray &token)
             continue;
 
         qDebug() << "Client" << QString("%1:%2").arg(it.value()->name(), client->uniqueId()) << "authorized";
-
-        if (it.value()->clients().contains(client->uniqueId()))
-            it.value()->clients().value(client->uniqueId())->close();
-
         client->setParent(it.value().data());
         it.value()->clients().insert(client->uniqueId(), client);
         break;

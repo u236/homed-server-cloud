@@ -19,6 +19,7 @@ Client::Client(QTcpSocket *socket) : QObject(nullptr), m_socket(socket), m_timer
 Client::~Client(void)
 {
     delete m_aes;
+    close();
 }
 
 void Client::publish(const Endpoint &endpoint, const QJsonObject &json)
