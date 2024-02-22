@@ -1,6 +1,6 @@
 QT = core network sql
 
-CONFIG += c++17 console
+CONFIG += c++17 console debug
 
 SOURCES += \
         capability.cpp \
