@@ -550,6 +550,12 @@ void Controller::requestReceived(Request &request)
                     const Endpoint &endpoint = device->endpoints().value(static_cast <quint8> (list.value(3).toInt()));
                     QJsonArray capabilities, properties;
 
+                    if (endpoint.isNull())
+                    {
+                        devices.append(QJsonObject {{"id", id}, {"error_code", "DEVICE_NOT_FOUND"}});
+                        continue;
+                    }
+
                     for (int i = 0; i < endpoint->capabilities().count(); i++)
                     {
                         const Capability capability = endpoint->capabilities().at(i);
