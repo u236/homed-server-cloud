@@ -311,7 +311,7 @@ void Client::parseData(QByteArray &buffer)
                         break;
                 }
 
-                map.insert(id, Device(new DeviceObject(id, name)));
+                map.insert(id, Device(new DeviceObject(id, name, device.value("description").toString())));
             }
 
             for (auto it = map.begin(); it != map.end(); it++)

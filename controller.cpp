@@ -486,7 +486,7 @@ void Controller::requestReceived(Request &request)
 
                     if (!capabilities.isEmpty() || !properties.isEmpty())
                     {
-                        QString id = client->uniqueId().append('/').append(device->id()), name = device->name();
+                        QString id = client->uniqueId().append('/').append(device->id()), name = device->name(), model = device->name();
                         QJsonObject json;
 
                         if (it.value()->id())
@@ -495,7 +495,10 @@ void Controller::requestReceived(Request &request)
                             name.append(QString(" %1").arg(it.value()->id()));
                         }
 
-                        devices.append(QJsonObject {{"id", id}, {"name", name}, {"type", endpoint->type()}, {"capabilities", capabilities}, {"properties", properties}});
+                        if (!device->description().isEmpty())
+                            model.append(QString(" (%1)").arg(device->description()));
+
+                        devices.append(QJsonObject {{"id", id}, {"name", name}, {"type", endpoint->type()}, {"capabilities", capabilities}, {"properties", properties}, {"device_info", QJsonObject{{"model", model}}}});
                     }
                 }
             }

@@ -50,10 +50,11 @@ class DeviceObject
 
 public:
 
-    DeviceObject(const QString &id, const QString &name) : m_id(id), m_name(name) {}
+    DeviceObject(const QString &id, const QString &name, const QString &description) : m_id(id), m_name(name), m_description(description) {}
 
     inline QString id(void) { return m_id; }
     inline QString name(void) { return m_name; }
+    inline QString description(void) { return m_description; }
 
     inline bool available(void) { return m_availabale; }
     inline void setAvailable(bool value) { m_availabale = value; }
@@ -62,7 +63,7 @@ public:
 
 private:
 
-    QString m_id, m_name;
+    QString m_id, m_name, m_description;
     bool m_availabale;
 
     QMap <quint8, Endpoint> m_endpoints;
