@@ -701,7 +701,10 @@ void Controller::disconnected(void)
     UserObject *user = reinterpret_cast <UserObject*> (client->parent());
 
     if (user)
+    {
         qDebug() << "Client" << QString("%1:%2").arg(user->name(), client->uniqueId()) << "disconnected";
+        user->clients().remove(client->uniqueId());
+    }
 
     client->deleteLater();
 }

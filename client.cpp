@@ -307,7 +307,7 @@ void Client::parseData(QByteArray &buffer)
                         continue;
 
                     case 2: // custom
-                        id = QString("custom/%1").arg(device.contains("id") ? device.value("id").toString() : name);
+                        id = QString("custom/%1").arg(message.value("names").toBool() ? name : device.value("id").toString());
                         break;
                 }
 
