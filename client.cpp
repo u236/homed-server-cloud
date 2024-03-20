@@ -82,7 +82,7 @@ void Client::parseExposes(const Endpoint &endpoint, const QList <QVariant> &expo
 
     if (exposes.contains("action"))
     {
-        QList <QVariant> list = options.value("action").toMap().value("trigger").toList();
+        QList <QVariant> list = options.value("action").toMap().value("enum").toList();
 
         if (list.contains("singleClick") || list.contains("doubleClick") || list.contains("hold"))
         {
@@ -307,7 +307,7 @@ void Client::parseData(QByteArray &buffer)
                         continue;
 
                     case 2: // custom
-                        id = QString("custom/%1").arg(device.contains("id") ? device.value("id").toString() : name);
+                        id = QString("custom/%1").arg(message.value("names").toBool() ? name : device.value("id").toString());
                         break;
                 }
 
