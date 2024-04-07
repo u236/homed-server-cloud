@@ -23,14 +23,14 @@ public:
     inline QString body(void) { return m_body; }
     inline void setBody(const QString &value) { m_body = value; }
 
-    inline QMap <QString, QString> &headers(void) { return m_hearers; }
+    inline QMap <QString, QString> &headers(void) { return m_headers; }
     inline QMap <QString, QString> &data(void) { return m_data; }
 
 private:
 
     QTcpSocket *m_socket;
     QString m_method, m_url, m_body;
-    QMap <QString, QString> m_hearers, m_data;
+    QMap <QString, QString> m_headers, m_data;
 
 };
 

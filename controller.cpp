@@ -76,7 +76,7 @@ QByteArray Controller::randomData(int length)
     return data;
 }
 
-void Controller::updateTokens(const User &user)
+void Controller::storeTokens(const User &user)
 {
     QSqlQuery query(m_db);
     query.exec(QString("UPDATE users SET accessToken = '%1', refreshToken = '%2', tokenExpire = %3, timestamp = %4 WHERE name = '%5'").arg(user->accessToken().toHex(), user->refreshToken().toHex()).arg(user->tokenExpire()).arg(QDateTime::currentSecsSinceEpoch()).arg(user->name().constData()));
@@ -371,6 +371,7 @@ void Controller::requestReceived(Request &request)
             QByteArray code = QByteArray::fromHex(request.data().value("code").toUtf8());
             aes.cbcDecrypt(code);
             user = m_codes.value(code);
+            m_codes.remove(code);
         }
 
         if (user.isNull())
@@ -384,7 +385,7 @@ void Controller::requestReceived(Request &request)
         user->setAccessToken(randomData(32));
         user->setRefreshToken(randomData(32));
         user->setTokenExpire(QDateTime::currentSecsSinceEpoch() + TOKEN_EXPIRE_TIMEOUT);
-        updateTokens(user);
+        storeTokens(user);
 
         accessToken = user->accessToken();
         refreshToken = user->refreshToken();
@@ -427,7 +428,7 @@ void Controller::requestReceived(Request &request)
         user->setTokenExpire(0);
 
         qDebug() << user->name() << "unlinked";
-        updateTokens(user);
+        storeTokens(user);
 
         m_http->sendResponse(request, 200, {{"Content-Type", "application/json"}}, QJsonDocument(QJsonObject {{"request_id", request.headers().value("X-Request-Id")}}).toJson(QJsonDocument::Compact));
         return;

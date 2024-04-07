@@ -14,7 +14,7 @@ HTTP::HTTP(QSettings *settings, QObject *parent) : QObject(parent), m_server(new
     qDebug() << "HTTP server started";
 }
 
-void HTTP::sendResponse(Request &request, quint16 code, const QMap<QString, QString> &headers, const QByteArray &response)
+void HTTP::sendResponse(Request &request, quint16 code, const QMap <QString, QString> &headers, const QByteArray &response)
 {
     QByteArray buffer;
 

@@ -1,7 +1,7 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
-#define CODE_EXPIRE_TIMEOUT     300
+#define CODE_EXPIRE_TIMEOUT     60
 #define TOKEN_EXPIRE_TIMEOUT    86400
 
 #include <QtSql>
@@ -91,7 +91,7 @@ private:
     QMap <QByteArray, User> m_codes;
 
     QByteArray randomData(int length);
-    void updateTokens(const User &user);
+    void storeTokens(const User &user);
 
     User findUser(const QByteArray &name);
     User findUser(const QString &header);
