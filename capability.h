@@ -17,12 +17,15 @@ class CapabilityObject
 
 public:
 
-    CapabilityObject(const QString &type) : m_type(type) {}
+    CapabilityObject(const QString &type) : m_type(type), m_updated(false) {}
     virtual ~CapabilityObject(void) {}
 
     inline QString type(void) { return m_type; }
     inline QMap <QString, QVariant> &parameters(void) { return m_parameters; }
     inline QMap <QString, QVariant> &data(void) { return m_data; }
+
+    inline bool updated(void) { return m_updated; }
+    inline void setUpdated(bool value) { m_updated = value; }
 
     virtual QJsonObject state(void) = 0;
     virtual QJsonObject action(const QJsonObject &) = 0;
@@ -31,6 +34,7 @@ protected:
 
     QString m_type;
     QMap <QString, QVariant> m_parameters, m_data;
+    bool m_updated;
 
 };
 
@@ -51,6 +55,9 @@ public:
     inline QVariant value(void) {return m_value; }
     inline void setValue(const QVariant &value) { m_value = value; }
 
+    inline bool updated(void) { return m_updated; }
+    inline void setUpdated(bool value) { m_updated = value; }
+
     QJsonObject state(void);
 
 protected:
@@ -60,6 +67,7 @@ protected:
 
     QMap <QString, QVariant> m_parameters, m_events;
     QVariant m_value;
+    bool m_updated;
 
     void addEvents(void);
 

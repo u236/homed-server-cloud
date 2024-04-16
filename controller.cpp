@@ -739,38 +739,59 @@ void Controller::devicesUpdated(void)
     }
 }
 
-void Controller::dataUpdated(const Endpoint &endpoint, const QList <Capability> &capabilitiesList, const QList <Property> &propertiesList)
+void Controller::dataUpdated(const Device &device)
 {
     Client *client = reinterpret_cast <Client*> (sender());
     UserObject *user = reinterpret_cast <UserObject*> (client->parent());
+    QJsonObject json = {{"ts", QDateTime::currentSecsSinceEpoch()}};
+    QJsonArray devices;
 
-    if (user)
+    if (!user)
+        return;
+
+    for (auto it = device->endpoints().begin(); it != device->endpoints().end(); it++)
     {
-        QString id = client->uniqueId().append('/').append(endpoint->device()->id());
-        QJsonObject json = {{"ts", QDateTime::currentSecsSinceEpoch()}};
+        const Endpoint &endpoint = it.value();
+        QString id = client->uniqueId().append('/').append(device->id());
         QJsonArray capabilities, properties;
 
         if (endpoint->id())
             id.append(QString("/%1").arg(endpoint->id()));
 
-        for (int i = 0; i < capabilitiesList.count(); i++)
+        for (int i = 0; i < endpoint->capabilities().count(); i++)
         {
-            const Capability &capability = capabilitiesList.at(i);
-            capabilities.append(QJsonObject {{"type", capability->type()}, {"state", capability->state()}});
-        }
+            const Capability &capability = endpoint->capabilities().at(i);
 
-        for (int i = 0; i < propertiesList.count(); i++)
-        {
-            const Property &property = propertiesList.at(i);
-            properties.append(QJsonObject {{"type", property->type()}, {"state", property->state()}});
-
-            if (property->instance() != "button" && property->instance() != "vibration")
+            if (!capability->updated())
                 continue;
 
-            property->setValue(QVariant());
+            capabilities.append(QJsonObject {{"type", capability->type()}, {"state", capability->state()}});
+            capability->setUpdated(false);
         }
 
-        json.insert("payload", QJsonObject {{"user_id", user->name().constData()}, {"devices", QJsonArray {QJsonObject {{"id", id}, {"capabilities", capabilities}, {"properties", properties}}}}});
+        for (auto it = endpoint->properties().begin(); it != endpoint->properties().end(); it++)
+        {
+            if (!it.value()->updated())
+                continue;
+
+            properties.append(QJsonObject {{"type", it.value()->type()}, {"state", it.value()->state()}});
+            it.value()->setUpdated(false);
+
+            if (it.value()->instance() != "button" && it.value()->instance() != "vibration")
+                continue;
+
+            it.value()->setValue(QVariant());
+        }
+
+        if (capabilities.isEmpty() && properties.isEmpty())
+            continue;
+
+        devices.append(QJsonObject {{"id", id}, {"capabilities", capabilities}, {"properties", properties}});
+    }
+
+    if (!devices.isEmpty())
+    {
+        json.insert("payload", QJsonObject {{"user_id", user->name().constData()}, {"devices", devices}});
         system(QString("curl -i -s -X POST https://dialogs.yandex.net/api/v1/skills/%1/callback/state -H 'Authorization: OAuth %2' -H 'Content-Type: application/json' -d '%3' > /dev/null &").arg(m_skillId, m_skillToken, QJsonDocument(json).toJson(QJsonDocument::Compact).constData()).toUtf8().constData());
         m_eventCount++;
     }

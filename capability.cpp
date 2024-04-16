@@ -1,7 +1,7 @@
 #include <math.h>
 #include "capability.h"
 
-PropertyObject::PropertyObject(const QString &type, const QString &instance, const QString &unit, double divider) : m_type(type), m_instance(instance), m_divider(divider)
+PropertyObject::PropertyObject(const QString &type, const QString &instance, const QString &unit, double divider) : m_type(type), m_instance(instance), m_divider(divider), m_updated(false)
 {
     if (!unit.isEmpty())
         m_parameters.insert("unit", unit);

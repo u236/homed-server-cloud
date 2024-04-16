@@ -107,7 +107,7 @@ private slots:
     void disconnected(void);
     void tokenReceived(const QByteArray &token);
     void devicesUpdated(void);
-    void dataUpdated(const Endpoint &endpoint, const QList <Capability> &capabilitiesList, const QList <Property> &propertiesList);
+    void dataUpdated(const Device &device);
 
 };
 

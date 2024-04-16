@@ -23,13 +23,17 @@ class EndpointObject
 
 public:
 
-    EndpointObject(const quint8 &id, const Device &device) : m_id(id), m_device(device) {}
+    EndpointObject(const quint8 &id, const Device &device, bool numeric) : m_id(id), m_device(device), m_numeric(numeric) {}
 
     inline quint8 id(void) { return m_id; }
     inline Device device(void) { return m_device; }
+    inline bool numeric(void) { return m_numeric; }
 
     inline QString type(void) { return m_type; }
     inline void setType(const QString &value) { if (m_type.isEmpty()) m_type = value; }
+
+    inline QList <QString> &exposes(void) { return m_exposes; }
+    inline QMap <QString, QVariant> &options(void) { return m_options; }
 
     inline QList <Capability> &capabilities(void) { return m_capabilities; }
     inline QMap <QString, Property> &properties(void) { return m_properties; }
@@ -38,8 +42,13 @@ private:
 
     quint8 m_id;
     QWeakPointer <DeviceObject> m_device;
+    bool m_numeric;
 
     QString m_type;
+
+    QList <QString> m_exposes;
+    QMap <QString, QVariant> m_options;
+
     QList <Capability> m_capabilities;
     QMap <QString, Property> m_properties;
 
@@ -56,15 +65,15 @@ public:
     inline QString name(void) { return m_name; }
     inline QString description(void) { return m_description; }
 
-    inline bool available(void) { return m_availabale; }
-    inline void setAvailable(bool value) { m_availabale = value; }
+    inline bool available(void) { return m_available; }
+    inline void setAvailable(bool value) { m_available = value; }
 
     inline QMap <quint8, Endpoint> &endpoints(void) { return m_endpoints; }
 
 private:
 
     QString m_id, m_name, m_description;
-    bool m_availabale;
+    bool m_available;
 
     QMap <quint8, Endpoint> m_endpoints;
 
@@ -109,10 +118,10 @@ private:
     Status m_status;
     QString m_uniqueId;
 
-    QList <QString> m_services, m_subscriptions;
+    QList <QString> m_services;
     QMap <QString, Device> m_devices;
 
-    void parseExposes(const Endpoint &endpoint, const QList <QVariant> &exposes, const QMap <QString, QVariant> &options);
+    void parseExposes(const Endpoint &endpoint);
     void sendRequest(const QString &action, const QString &topic, const QJsonObject &message = QJsonObject());
     void parseData(QByteArray &buffer);
 
@@ -126,7 +135,7 @@ signals:
     void disconnected(void);
     void tokenReceived(const QByteArray &token);
     void devicesUpdated(void);
-    void dataUpdated(const Endpoint &endpoint, const QList <Capability> &capabilitiesList, const QList <Property> &propertiesList);
+    void dataUpdated(const Device &device);
 
 };
 
