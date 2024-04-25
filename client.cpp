@@ -352,16 +352,6 @@ void Client::parseData(QByteArray &buffer)
 
             emit devicesUpdated();
         }
-        else if (topic.startsWith("device/"))
-        {
-            QList <QString> list = topic.split('/');
-            Device device = m_devices.value(QString("%1/%2").arg(list.value(1), list.value(2)));
-
-            if (device.isNull())
-                return;
-
-            device->setAvailable(message.value("status").toString() == "online" ? true : false);
-        }
         else if (topic.startsWith("expose/"))
         {
             QList <QString> topicList = topic.split('/'), subscriptions;
@@ -421,6 +411,16 @@ void Client::parseData(QByteArray &buffer)
                 sendRequest("subscribe", subscriptions.at(i));
 
             sendRequest("publish", QString("command/").append(topicList.value(1)), {{"action", "getProperties"}, {"device", device->name()}});
+        }
+        else if (topic.startsWith("device/"))
+        {
+            QList <QString> list = topic.split('/');
+            Device device = m_devices.value(QString("%1/%2").arg(list.value(1), list.value(2)));
+
+            if (device.isNull())
+                return;
+
+            device->setAvailable(message.value("status").toString() == "online" ? true : false);
         }
         else if (topic.startsWith("fd/"))
         {
