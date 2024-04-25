@@ -59,7 +59,7 @@ class DeviceObject
 
 public:
 
-    DeviceObject(const QString &id, const QString &name, const QString &description) : m_id(id), m_name(name), m_description(description) {}
+    DeviceObject(const QString &id, const QString &name, const QString &description) : m_id(id), m_name(name), m_description(description), m_available(false) {}
 
     inline QString id(void) { return m_id; }
     inline QString name(void) { return m_name; }

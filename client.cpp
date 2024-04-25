@@ -328,17 +328,13 @@ void Client::parseData(QByteArray &buffer)
 
             for (auto it = map.begin(); it != map.end(); it++)
             {
-                if (!m_devices.contains(it.key()))
-                {
-                    QList <QString> subscriptions = {QString("device/").append(it.key()), QString("expose/").append(it.key())};
+                if (m_devices.contains(it.key()))
+                    continue;
 
-                    m_devices.insert(it.key(), it.value());
-
-                    for (int i = 0; i < subscriptions.count(); i++)
-                        sendRequest("subscribe", subscriptions.at(i));
-
-                    check = true;
-                }
+                m_devices.insert(it.key(), it.value());
+                sendRequest("subscribe", QString("expose/").append(it.key()));
+                sendRequest("subscribe", QString("device/").append(it.key()));
+                check = true;
             }
 
             for (auto it = m_devices.begin(); it != m_devices.end(); it++)
@@ -391,19 +387,27 @@ void Client::parseData(QByteArray &buffer)
                     quint8 id = static_cast <quint8> (itemList.count() > 1 ? itemList.value(1).toInt() : it.key().toInt());
                     Endpoint endpoint = device->endpoints().value(id);
 
+                    expose = itemList.value(0);
+
                     if (endpoint.isNull())
                     {
                         endpoint = Endpoint(new EndpointObject(id, device, itemList.count() > 1));
+
+                        for (auto it = options.begin(); it != options.end(); it++)
+                        {
+                            QList <QString> optionList = it.key().split('_');
+
+                            if (!optionList.value(1).isEmpty() && optionList.value(1).toInt() != id)
+                                continue;
+
+                            endpoint->options().insert(optionList.value(0), it.value().toVariant());
+                        }
+
                         device->endpoints().insert(id, endpoint);
                     }
 
-                    expose = itemList.value(0);
-
                     if (!endpoint->exposes().contains(expose))
                         endpoint->exposes().append(expose);
-
-                    if (options.contains(item))
-                        endpoint->options().insert(expose, options.value(item));
 
                     if (endpoint->id() && !endpoint->numeric())
                         subscription.append(QString("/%1").arg(id));
