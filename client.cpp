@@ -61,13 +61,16 @@ void Client::parseExposes(const Endpoint &endpoint)
 
     if (endpoint->exposes().contains("light"))
     {
+        QList <QVariant> list = endpoint->options().value("light").toList();
+
         endpoint->setType("devices.types.light");
         endpoint->capabilities().append(Capability(new Capabilities::Switch));
 
-        if (endpoint->options().value("light").toList().contains("level"))
+        if (list.contains("level"))
             endpoint->capabilities().append(Capability(new Capabilities::Brightness));
 
-        endpoint->capabilities().append(Capability(new Capabilities::Color(endpoint->options())));
+        if (list.contains("color") || list.contains("colorTemperature"))
+            endpoint->capabilities().append(Capability(new Capabilities::Color(endpoint->options())));
     }
 
     if (endpoint->exposes().contains("cover"))

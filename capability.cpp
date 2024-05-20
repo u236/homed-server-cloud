@@ -109,11 +109,6 @@ Capabilities::Color::Color(const QMap <QString, QVariant> &options) : Capability
         m_parameters.insert("temperature_k", range);
         m_data.insert("colorTemperature", QVariant());
     }
-
-    if (!m_parameters.isEmpty())
-        return;
-
-    m_parameters.insert("temperature_k", QMap <QString, QVariant> {{"min", 5600}, {"max", 5600}});
 }
 
 QJsonObject Capabilities::Color::state(void)
