@@ -313,17 +313,9 @@ void Client::parseData(QByteArray &buffer)
 
                 switch (m_services.indexOf(service))
                 {
-                    case 0: // zigbee
-                        id = QString("zigbee/%1").arg(message.value("names").toBool() ? name : device.value("ieeeAddress").toString());
-                        break;
-
-                    case 1: // modbus
-                        // id = QString("modbus/%1.%2").arg(device.value("portId").toInt()).arg(device.value("slaveId").toInt());
-                        continue;
-
-                    case 2: // custom
-                        id = QString("custom/%1").arg(message.value("names").toBool() ? name : device.value("id").toString());
-                        break;
+                    case 0: id = QString("zigbee/%1").arg(message.value("names").toBool() ? name : device.value("ieeeAddress").toString()); break; // zigbee
+                    case 1: id = QString("modbus/%1.%2").arg(device.value("portId").toInt()).arg(device.value("slaveId").toInt()); break; // modbus
+                    case 2: id = QString("custom/%1").arg(message.value("names").toBool() ? name : device.value("id").toString()); break; // custom
                 }
 
                 map.insert(id, Device(new DeviceObject(id, name, device.value("description").toString())));
