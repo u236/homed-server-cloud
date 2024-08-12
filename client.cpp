@@ -322,9 +322,9 @@ void Client::parseData(QByteArray &buffer)
 
                 switch (m_types.indexOf(type))
                 {
-                    case 0: id = QString("%1").arg(names ? name : device.value("ieeeAddress").toString()); break; // zigbee
+                    case 0: id = device.value("ieeeAddress").toString(); break; // zigbee
                     case 1: id = QString("%1.%2").arg(device.value("portId").toInt()).arg(device.value("slaveId").toInt()); break; // modbus
-                    case 2: id = QString("%1").arg(names ? name : device.value("id").toString()); break; // custom
+                    case 2: id = device.value("id").toString(); break; // custom
                 }
 
                 key = QString("%1/%2").arg(type, id);
