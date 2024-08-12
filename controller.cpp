@@ -487,8 +487,7 @@ void Controller::requestReceived(Request &request)
 
                     if (!capabilities.isEmpty() || !properties.isEmpty())
                     {
-                        QString id = client->uniqueId().append('/').append(device->id()), name = device->name(), model = device->name();
-                        QJsonObject json;
+                        QString id = client->uniqueId().append('/').append(device->key()), name = device->name(), model = device->name();
 
                         if (it.value()->id())
                         {
@@ -752,7 +751,7 @@ void Controller::dataUpdated(const Device &device)
     for (auto it = device->endpoints().begin(); it != device->endpoints().end(); it++)
     {
         const Endpoint &endpoint = it.value();
-        QString id = client->uniqueId().append('/').append(device->id());
+        QString id = client->uniqueId().append('/').append(device->key());
         QJsonArray capabilities, properties;
 
         if (endpoint->id())

@@ -59,11 +59,19 @@ class DeviceObject
 
 public:
 
-    DeviceObject(const QString &id, const QString &name, const QString &description) : m_id(id), m_name(name), m_description(description), m_available(false) {}
+    DeviceObject(const QString &key, const QString &topic, const QString &name, const QString &description) :
+        m_key(key), m_topic(topic), m_name(name), m_description(description), m_available(false) {}
 
-    inline QString id(void) { return m_id; }
+    inline QString key(void) { return m_key; }
+
+    inline QString topic(void) { return m_topic; }
+    inline void setTopic(const QString &value) { m_topic = value; }
+
     inline QString name(void) { return m_name; }
+    inline void setName(const QString &value) { m_name = value; }
+
     inline QString description(void) { return m_description; }
+    inline void setDescription(const QString &value) { m_description = value; }
 
     inline bool available(void) { return m_available; }
     inline void setAvailable(bool value) { m_available = value; }
@@ -72,7 +80,7 @@ public:
 
 private:
 
-    QString m_id, m_name, m_description;
+    QString m_key, m_topic, m_name, m_description;
     bool m_available;
 
     QMap <quint8, Endpoint> m_endpoints;
@@ -118,8 +126,10 @@ private:
     Status m_status;
     QString m_uniqueId;
 
-    QList <QString> m_services;
+    QList <QString> m_types;
     QMap <QString, Device> m_devices;
+
+    Device findDevice(const QString &search);
 
     void parseExposes(const Endpoint &endpoint);
     void sendRequest(const QString &action, const QString &topic, const QJsonObject &message = QJsonObject());

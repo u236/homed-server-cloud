@@ -6,7 +6,7 @@
 
 Client::Client(QTcpSocket *socket) : QObject(nullptr), m_socket(socket), m_timer(new QTimer(this)), m_aes(new AES128), m_status(Status::Handshake)
 {
-    m_services = {"zigbee", "modbus", "custom"};
+    m_types = {"zigbee", "modbus", "custom"};
 
     connect(m_socket, &QTcpSocket::readyRead, this, &Client::readyRead);
     connect(m_socket, &QTcpSocket::disconnected, this, &Client::disconnected);
@@ -24,7 +24,7 @@ Client::~Client(void)
 
 void Client::publish(const Endpoint &endpoint, const QJsonObject &json)
 {
-    QString topic = QString("td/").append(endpoint->device()->id());
+    QString topic = QString("td/").append(endpoint->device()->topic());
 
     if (endpoint->numeric())
     {
@@ -47,6 +47,15 @@ void Client::publish(const Endpoint &endpoint, const QJsonObject &json)
 void Client::close(void)
 {
     m_socket->close();
+}
+
+Device Client::findDevice(const QString &search)
+{
+    for (auto it = m_devices.begin(); it != m_devices.end(); it++)
+        if (search.startsWith(it.value()->key()) || search.startsWith(it.value()->topic()))
+            return it.value();
+
+    return Device();
 }
 
 void Client::parseExposes(const Endpoint &endpoint)
@@ -284,9 +293,7 @@ void Client::parseData(QByteArray &buffer)
             return;
         }
 
-        for (int i = 0; i < m_services.count(); i++)
-            sendRequest("subscribe", QString("status/").append(m_services.at(i)));
-
+        sendRequest("subscribe", "status/#");
         m_status = Status::Ready;
         m_timer->stop();
     }
@@ -297,44 +304,55 @@ void Client::parseData(QByteArray &buffer)
 
         if (topic.startsWith("status/"))
         {
-            QList <QString> list = topic.split('/');
             QMap <QString, Device> map;
+            QString type = topic.split('/').value(1), service = topic.mid(topic.indexOf('/') + 1);
             QJsonArray devices = message.value("devices").toArray();
-            QString service = list.value(1);
-            bool check = false;
+            bool names = message.value("names").toBool(), check = false;
+
+            if (!m_types.contains(type))
+                return;
 
             for (auto it = devices.begin(); it != devices.end(); it++)
             {
                 QJsonObject device = it->toObject();
-                QString name = device.value("name").toString(), id;
+                QString name = device.value("name").toString(), id, key;
 
-                if (name.isEmpty() || device.value("removed").toBool() || !device.value("cloud").toBool(true))
+                if (name.isEmpty() || device.value("removed").toBool() || !device.value("cloud").toBool(true) || name == "HOMEd Coordinator")
                     continue;
 
-                switch (m_services.indexOf(service))
+                switch (m_types.indexOf(type))
                 {
-                    case 0: id = QString("zigbee/%1").arg(message.value("names").toBool() ? name : device.value("ieeeAddress").toString()); break; // zigbee
-                    case 1: id = QString("modbus/%1.%2").arg(device.value("portId").toInt()).arg(device.value("slaveId").toInt()); break; // modbus
-                    case 2: id = QString("custom/%1").arg(message.value("names").toBool() ? name : device.value("id").toString()); break; // custom
+                    case 0: id = QString("%1").arg(names ? name : device.value("ieeeAddress").toString()); break; // zigbee
+                    case 1: id = QString("%1.%2").arg(device.value("portId").toInt()).arg(device.value("slaveId").toInt()); break; // modbus
+                    case 2: id = QString("%1").arg(names ? name : device.value("id").toString()); break; // custom
                 }
 
-                map.insert(id, Device(new DeviceObject(id, name, device.value("description").toString())));
+                key = QString("%1/%2").arg(type, id);
+                map.insert(key, Device(new DeviceObject(key, QString("%1/%2").arg(service, names ? name : id), name, device.value("description").toString())));
             }
 
             for (auto it = map.begin(); it != map.end(); it++)
             {
-                if (m_devices.contains(it.key()))
-                    continue;
+                const Device &device = m_devices.value(it.key());
 
-                m_devices.insert(it.key(), it.value());
-                sendRequest("subscribe", QString("expose/").append(it.key()));
-                sendRequest("subscribe", QString("device/").append(it.key()));
-                check = true;
+                if (device.isNull())
+                {
+                    m_devices.insert(it.key(), it.value());
+                    sendRequest("subscribe", QString("expose/").append(it.value()->topic()));
+                    sendRequest("subscribe", QString("device/").append(it.value()->topic()));
+                    check = true;
+                }
+                else
+                {
+                    device->setTopic(it.value()->topic());
+                    device->setName(it.value()->name());
+                    device->setDescription(it.value()->description());
+                }
             }
 
             for (auto it = m_devices.begin(); it != m_devices.end(); it++)
             {
-                if (it.key().split('/').value(0) != service)
+                if (!it.value()->topic().startsWith(service))
                     continue;
 
                 if (!map.contains(it.key()))
@@ -354,8 +372,8 @@ void Client::parseData(QByteArray &buffer)
         }
         else if (topic.startsWith("expose/"))
         {
-            QList <QString> topicList = topic.split('/'), subscriptions;
-            Device device = m_devices.value(QString("%1/%2").arg(topicList.value(1), topicList.value(2)));
+            const Device &device = findDevice(topic.mid(topic.indexOf('/') + 1));
+            QList <QString> subscriptions;
 
             if (device.isNull() || !device->endpoints().isEmpty())
                 return;
@@ -367,7 +385,7 @@ void Client::parseData(QByteArray &buffer)
 
                 for (int i = 0; i < items.count(); i++)
                 {
-                    QString item = items.at(i).toString(), subscription = QString("fd/").append(device->id()), expose;
+                    QString item = items.at(i).toString(), subscription = QString("fd/").append(device->topic()), expose;
                     QList <QString> itemList = item.split('_');
                     quint8 id = static_cast <quint8> (itemList.count() > 1 ? itemList.value(1).toInt() : it.key().toInt());
                     Endpoint endpoint = device->endpoints().value(id);
@@ -410,12 +428,11 @@ void Client::parseData(QByteArray &buffer)
             for (int i = 0; i < subscriptions.count(); i++)
                 sendRequest("subscribe", subscriptions.at(i));
 
-            sendRequest("publish", QString("command/").append(topicList.value(1)), {{"action", "getProperties"}, {"device", device->name()}});
+            sendRequest("publish", QString("command/").append(device->topic().mid(0, device->topic().lastIndexOf('/'))), {{"action", "getProperties"}, {"device", device->topic().split('/').last()}, {"service", "cloud"}});
         }
         else if (topic.startsWith("device/"))
         {
-            QList <QString> list = topic.split('/');
-            Device device = m_devices.value(QString("%1/%2").arg(list.value(1), list.value(2)));
+            const Device &device = findDevice(topic.mid(topic.indexOf('/') + 1));
 
             if (device.isNull())
                 return;
@@ -424,39 +441,39 @@ void Client::parseData(QByteArray &buffer)
         }
         else if (topic.startsWith("fd/"))
         {
+            const Device &device = findDevice(topic.mid(topic.indexOf('/') + 1));
+            Endpoint endpoint;
             QMap <QString, QVariant> data = message.toVariantMap();
-            QList <QString> topicList = topic.split('/');
-            Device device = m_devices.value(QString("%1/%2").arg(topicList.value(1), topicList.value(2)));
 
             if (device.isNull())
+                return;
+
+            endpoint = device->endpoints().value(static_cast <quint8> (topic.split('/').last().toInt()));
+
+            if (endpoint.isNull())
                 return;
 
             for (auto it = data.begin(); it != data.end(); it++)
             {
                 QList <QString> itemList = it.key().split('_');
                 QString name = itemList.value(0);
-                Endpoint endpoint = device->endpoints().value(static_cast <quint8> (itemList.count() > 1 ? itemList.value(1).toInt() : topicList.value(3).toInt()));
+                const Property property = endpoint->properties().value(name);
 
-                if (!endpoint.isNull())
+                for (int i = 0; i < endpoint->capabilities().count(); i++)
                 {
-                    const Property property = endpoint->properties().value(name);
+                    const Capability &capability = endpoint->capabilities().at(i);
 
-                    for (int i = 0; i < endpoint->capabilities().count(); i++)
-                    {
-                        const Capability &capability = endpoint->capabilities().at(i);
+                    if (!capability->data().contains(name) || capability->data().value(name) == it.value())
+                        continue;
 
-                        if (!capability->data().contains(name) || capability->data().value(name) == it.value())
-                            continue;
+                    capability->data().insert(name, it.value());
+                    capability->setUpdated(true);
+                }
 
-                        capability->data().insert(name, it.value());
-                        capability->setUpdated(true);
-                    }
-
-                    if (!property.isNull() && property->value() != it.value() && (property->type() != "devices.properties.event" || property->events().contains(it.value().toString())))
-                    {
-                        property->setValue(it.value());
-                        property->setUpdated(true);
-                    }
+                if (!property.isNull() && property->value() != it.value() && (property->type() != "devices.properties.event" || property->events().contains(it.value().toString())))
+                {
+                    property->setValue(it.value());
+                    property->setUpdated(true);
                 }
             }
 
