@@ -203,9 +203,7 @@ QJsonObject Capabilities::Open::action(const QJsonObject &json)
     return {{"position", json.value("relative").toBool() ? m_data.value("position").toDouble() + value : value}};
 }
 
-
-
-Capabilities::ThermostatPower::ThermostatPower(void) : CapabilityObject("devices.capabilities.on_off")
+Capabilities::ThermostatPower::ThermostatPower(const QVariant &onValue) : CapabilityObject("devices.capabilities.on_off"), m_onValue(onValue)
 {
     m_data.insert("systemMode", QVariant());
 }
@@ -220,22 +218,37 @@ QJsonObject Capabilities::ThermostatPower::action(const QJsonObject &json)
     return {{"systemMode", json.value("value").toBool() ? QJsonValue::fromVariant(m_onValue) : "off"}};
 }
 
-Capabilities::ThermostatMode::ThermostatMode(const QList <QVariant> &list, ThermostatPower *power) : CapabilityObject("devices.capabilities.mode"), m_power(power)
+Capabilities::ThermostatMode::ThermostatMode(const QList <QVariant> &list, ThermostatPower *power) : CapabilityObject("devices.capabilities.mode"), m_power(power), m_value(list.first())
 {
-    m_parameters.insert("instance", "thermostat");
-    m_parameters.insert("modes", list);
+    QList <QVariant> check = {"cool", "heat", "dry", "fan"}, modes;
 
-    m_data.insert("systemMode", QVariant());
+    for (int i = 0; i < list.count(); i++)
+    {
+        QVariant value = list.at(i);
+
+        if (!check.contains(value))
+            continue;
+
+        modes.append(QMap <QString, QVariant> {{"value", value != "fan" ? value : "fan_only"}});
+    }
+
+    m_parameters.insert("instance", "thermostat");
+    m_parameters.insert("modes", modes);
+
+    m_data.insert("systemMode", m_value);
 }
 
 QJsonObject Capabilities::ThermostatMode::state(void)
 {
     QString value = m_data.value("systemMode").toString();
 
-    if (m_power)
-        m_power->setOnValue(value);
+    if (value != "off")
+        m_value = value;
 
-    return {{"thermostat", "on"}, {"value", value != "fan" ? value : "fan_only"}};
+    if (m_power)
+        m_power->setOnValue(m_value);
+
+    return {{"instance", "thermostat"}, {"value", m_value != "fan" ? QJsonValue::fromVariant(m_value) : "fan_only"}};
 }
 
 QJsonObject Capabilities::ThermostatMode::action(const QJsonObject &json)

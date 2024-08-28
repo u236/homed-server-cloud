@@ -44,7 +44,7 @@ void HTTP::newConnection(void)
 void HTTP::readyRead(void)
 {
     QTcpSocket *socket = reinterpret_cast <QTcpSocket*> (sender());
-    QList <QString> list = QString(socket->readAll()).split("\r\n\r\n"), head = list.value(0).split("\r\n"), target = head.value(0).split(' '), items;
+    QList <QString> list = QString(socket->readAll()).split("\r\n\r\n"), head = list.value(0).split("\r\n"), target = head.value(0).split(0x20), items;
     QString method = target.value(0), url = target.value(1), body = list.value(1);
     Request request(socket);
 

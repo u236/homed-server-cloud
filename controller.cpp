@@ -93,7 +93,7 @@ User Controller::findUser(const QByteArray &name)
 
 User Controller::findUser(const QString &header)
 {
-    QList <QString> list = header.split(' ');
+    QList <QString> list = header.split(0x20);
     QByteArray accessToken = QByteArray::fromHex(list.value(1).toUtf8());
 
     if (list.value(0) != "Bearer")

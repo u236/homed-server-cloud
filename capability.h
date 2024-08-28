@@ -145,7 +145,7 @@ namespace Capabilities
 
     public:
 
-        ThermostatPower(void);
+        ThermostatPower(const QVariant &onValue);
         QJsonObject state(void) override;
         QJsonObject action(const QJsonObject &json) override;
 
@@ -169,6 +169,7 @@ namespace Capabilities
     private:
 
         ThermostatPower *m_power;
+        QVariant m_value;
 
     };
 
