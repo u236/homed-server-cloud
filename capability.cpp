@@ -203,19 +203,45 @@ QJsonObject Capabilities::Open::action(const QJsonObject &json)
     return {{"position", json.value("relative").toBool() ? m_data.value("position").toDouble() + value : value}};
 }
 
-Capabilities::Thermostat::Thermostat(void) : CapabilityObject("devices.capabilities.on_off")
+
+
+Capabilities::ThermostatPower::ThermostatPower(void) : CapabilityObject("devices.capabilities.on_off")
 {
     m_data.insert("systemMode", QVariant());
 }
 
-QJsonObject Capabilities::Thermostat::state(void)
+QJsonObject Capabilities::ThermostatPower::state(void)
 {
     return {{"instance", "on"}, {"value", m_data.value("systemMode").toString() != "off" ? true : false}};
 }
 
-QJsonObject Capabilities::Thermostat::action(const QJsonObject &json)
+QJsonObject Capabilities::ThermostatPower::action(const QJsonObject &json)
 {
-    return {{"systemMode", json.value("value").toBool() ? "heat" : "off"}};
+    return {{"systemMode", json.value("value").toBool() ? QJsonValue::fromVariant(m_onValue) : "off"}};
+}
+
+Capabilities::ThermostatMode::ThermostatMode(const QList <QVariant> &list, ThermostatPower *power) : CapabilityObject("devices.capabilities.mode"), m_power(power)
+{
+    m_parameters.insert("instance", "thermostat");
+    m_parameters.insert("modes", list);
+
+    m_data.insert("systemMode", QVariant());
+}
+
+QJsonObject Capabilities::ThermostatMode::state(void)
+{
+    QString value = m_data.value("systemMode").toString();
+
+    if (m_power)
+        m_power->setOnValue(value);
+
+    return {{"thermostat", "on"}, {"value", value != "fan" ? value : "fan_only"}};
+}
+
+QJsonObject Capabilities::ThermostatMode::action(const QJsonObject &json)
+{
+    QString value = json.value("value").toString();
+    return {{"systemMode", value != "fan_only" ? value : "fan"}};
 }
 
 Capabilities::Temperature::Temperature(const QMap <QString, QVariant> &options) : CapabilityObject("devices.capabilities.range")

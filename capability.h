@@ -140,14 +140,35 @@ namespace Capabilities
 
     };
 
-    class Thermostat : public CapabilityObject
+    class ThermostatPower : public CapabilityObject
     {
 
     public:
 
-        Thermostat(void);
+        ThermostatPower(void);
         QJsonObject state(void) override;
         QJsonObject action(const QJsonObject &json) override;
+
+        inline void setOnValue(const QVariant &value) { m_onValue = value; }
+
+    private:
+
+        QVariant m_onValue;
+
+    };
+
+    class ThermostatMode : public CapabilityObject
+    {
+
+    public:
+
+        ThermostatMode(const QList <QVariant> &list, ThermostatPower *power);
+        QJsonObject state(void) override;
+        QJsonObject action(const QJsonObject &json) override;
+
+    private:
+
+        ThermostatPower *m_power;
 
     };
 
