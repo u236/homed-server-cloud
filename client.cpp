@@ -243,10 +243,13 @@ void Client::parseExposes(const Endpoint &endpoint)
         endpoint->properties().insert("power", Property(new Properties::Power));
     }
 
-    // battery
+    // other
 
     if (endpoint->type().isEmpty())
         return;
+
+    if (endpoint->exposes().contains("fanMode"))
+        endpoint->capabilities().append(Capability(new Capabilities::FanMode(endpoint->options().value("fanMode").toMap().value("enum").toList())));
 
     if (endpoint->exposes().contains("battery"))
         endpoint->properties().insert("battery", Property(new Properties::Battery));

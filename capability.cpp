@@ -279,6 +279,36 @@ QJsonObject Capabilities::Temperature::action(const QJsonObject &json)
     return {{"targetTemperature", round(json.value("relative").toBool() ? m_data.value("targetTemperature").toDouble() + value : value)}};
 }
 
+Capabilities::FanMode::FanMode(const QList <QVariant> &list) : CapabilityObject("devices.capabilities.mode")
+{
+    QList <QVariant> check = {"min", "low", "medium", "high", "max", "auto"}, modes;
+
+    for (int i = 0; i < list.count(); i++)
+    {
+        QVariant value = list.at(i);
+
+        if (!check.contains(value))
+            continue;
+
+        modes.append(QMap <QString, QVariant> {{"value", value}});
+    }
+
+    m_parameters.insert("instance", "fan_speed");
+    m_parameters.insert("modes", modes);
+
+    m_data.insert("fanMode", QVariant());
+}
+
+QJsonObject Capabilities::FanMode::state(void)
+{
+    return QJsonObject {{"instance", "fan_speed"}, {"value", m_data.value("fanMode").toString()}};
+}
+
+QJsonObject Capabilities::FanMode::action(const QJsonObject &json)
+{
+    return {{"fanMode", json.value("value").toString()}};
+}
+
 Properties::Button::Button(const QList <QVariant> &actions) : PropertyObject("devices.properties.event", "button")
 {
     if (actions.contains("singleClick"))

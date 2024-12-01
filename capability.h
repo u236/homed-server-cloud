@@ -183,6 +183,17 @@ namespace Capabilities
         QJsonObject action(const QJsonObject &json) override;
 
     };
+
+    class FanMode : public CapabilityObject
+    {
+
+    public:
+
+        FanMode(const QList <QVariant> &list);
+        QJsonObject state(void) override;
+        QJsonObject action(const QJsonObject &json) override;
+
+    };
 };
 
 namespace Properties
