@@ -2,7 +2,7 @@
 #define CONTROLLER_H
 
 #define CODE_EXPIRE_TIMEOUT     60
-#define TOKEN_EXPIRE_TIMEOUT    86400
+#define TOKEN_EXPIRE_TIMEOUT    8640000
 
 #include <QtSql>
 #include <QTcpServer>
