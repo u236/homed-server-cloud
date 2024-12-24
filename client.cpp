@@ -217,6 +217,14 @@ void Client::parseExposes(const Endpoint &endpoint)
         endpoint->properties().insert("illuminance", Property(new Properties::Illuminance));
     }
 
+    // water metet
+
+    if (endpoint->exposes().contains("volume"))
+    {
+        endpoint->setType("devices.types.smart_meter");
+        endpoint->properties().insert("volume", Property(new Properties::Volume));
+    }
+
     // electricity
 
     if (endpoint->exposes().contains("energy"))

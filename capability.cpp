@@ -9,7 +9,7 @@ PropertyObject::PropertyObject(const QString &type, const QString &instance, con
     m_parameters.insert("instance", m_instance);
 }
 
-QJsonObject PropertyObject::state()
+QJsonObject PropertyObject::state(void)
 {
     return {{"instance", m_instance}, {"value", m_type == "devices.properties.event" ? m_events.value(m_value.toString()).toString() : m_divider ? m_value.toDouble() / m_divider : QJsonValue::fromVariant(m_value)}};
 }

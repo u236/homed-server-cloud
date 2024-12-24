@@ -288,6 +288,15 @@ namespace Properties
 
     };
 
+    class VOC : public PropertyObject
+    {
+
+    public:
+
+        VOC(void) : PropertyObject("devices.properties.float", "tvoc", "unit.density.mcg_m3") {}
+
+    };
+
     class Illuminance : public PropertyObject
     {
 
@@ -297,12 +306,12 @@ namespace Properties
 
     };
 
-    class VOC : public PropertyObject
+    class Volume : public PropertyObject
     {
 
     public:
 
-        VOC(void) : PropertyObject("devices.properties.float", "tvoc", "unit.density.mcg_m3") {}
+        Volume(void) : PropertyObject("devices.properties.float", "water_meter", "unit.cubic_meter", 1000) {}
 
     };
 
