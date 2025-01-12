@@ -56,7 +56,11 @@ QJsonObject Capabilities::Brightness::state(void)
 QJsonObject Capabilities::Brightness::action(const QJsonObject &json)
 {
     double value = json.value("value").toDouble() * 2.55;
-    return {{"level", round(json.value("relative").toBool() ? m_data.value("level").toDouble() + value : value)}};
+
+    if (json.value("relative").toBool())
+        value += m_data.value("level").toDouble();
+
+    return {{"level", round(value < 0 ? 0 : value > 255 ? 255 : value)}};
 }
 
 Capabilities::Color::Color(const QMap <QString, QVariant> &options) : CapabilityObject("devices.capabilities.color_setting"), m_rgb(false)
@@ -200,7 +204,11 @@ QJsonObject Capabilities::Open::state(void)
 QJsonObject Capabilities::Open::action(const QJsonObject &json)
 {
     int value = json.value("value").toInt();
-    return {{"position", json.value("relative").toBool() ? m_data.value("position").toDouble() + value : value}};
+
+    if (json.value("relative").toBool())
+        value += m_data.value("position").toDouble();
+
+    return {{"position", value < 0 ? 0 : value > 100 ? 100 : value}};
 }
 
 Capabilities::ThermostatPower::ThermostatPower(const QVariant &onValue) : CapabilityObject("devices.capabilities.on_off"), m_onValue(onValue)
