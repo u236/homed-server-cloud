@@ -60,7 +60,7 @@ QJsonObject Capabilities::Brightness::action(const QJsonObject &json)
     if (json.value("relative").toBool())
         value += m_data.value("level").toDouble();
 
-    return {{"level", round(value < 0 ? 0 : value > 255 ? 255 : value)}};
+    return {{"level", round(value < 2.55 ? 2.55 : value > 255 ? 255 : value)}};
 }
 
 Capabilities::Color::Color(const QMap <QString, QVariant> &options) : CapabilityObject("devices.capabilities.color_setting"), m_rgb(false)
