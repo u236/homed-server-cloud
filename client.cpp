@@ -461,38 +461,37 @@ void Client::parseData(QByteArray &buffer)
         else if (topic.startsWith("fd/"))
         {
             const Device &device = findDevice(topic.mid(topic.indexOf('/') + 1));
-            Endpoint endpoint;
             QMap <QString, QVariant> data = message.toVariantMap();
 
             if (device.isNull())
                 return;
 
-            endpoint = device->endpoints().value(static_cast <quint8> (topic.split('/').last().toInt()));
-
-            if (endpoint.isNull())
-                return;
-
             for (auto it = data.begin(); it != data.end(); it++)
             {
                 QList <QString> itemList = it.key().split('_');
-                QString name = itemList.value(0);
-                const Property property = endpoint->properties().value(name);
+                Endpoint endpoint = device->endpoints().value(static_cast <quint8> (itemList.count() > 1 ? itemList.value(1).toInt() : topic.split('/').last().toInt()));
 
-                for (int i = 0; i < endpoint->capabilities().count(); i++)
+                if (!endpoint.isNull())
                 {
-                    const Capability &capability = endpoint->capabilities().at(i);
+                    QString name = itemList.value(0);
+                    const Property property = endpoint->properties().value(name);
 
-                    if (!capability->data().contains(name) || capability->data().value(name) == it.value())
-                        continue;
+                    for (int i = 0; i < endpoint->capabilities().count(); i++)
+                    {
+                        const Capability &capability = endpoint->capabilities().at(i);
 
-                    capability->data().insert(name, it.value());
-                    capability->setUpdated(true);
-                }
+                        if (!capability->data().contains(name) || capability->data().value(name) == it.value())
+                            continue;
 
-                if (!property.isNull() && property->value() != it.value() && (property->type() != "devices.properties.event" || property->events().contains(it.value().toString())))
-                {
-                    property->setValue(it.value());
-                    property->setUpdated(true);
+                        capability->data().insert(name, it.value());
+                        capability->setUpdated(true);
+                    }
+
+                    if (!property.isNull() && property->value() != it.value() && (property->type() != "devices.properties.event" || property->events().contains(it.value().toString())))
+                    {
+                        property->setValue(it.value());
+                        property->setUpdated(true);
+                    }
                 }
             }
 
