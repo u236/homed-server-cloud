@@ -369,19 +369,16 @@ void Client::parseData(QByteArray &buffer)
                 }
             }
 
-            for (auto it = m_devices.begin(); it != m_devices.end(); it++)
+            for (auto it = m_devices.begin(); it != m_devices.end(); NULL)
             {
-                if (!it.value()->topic().startsWith(service))
-                    continue;
-
-                if (!map.contains(it.key()))
+                if (it.value()->topic().startsWith(service) && !map.contains(it.key()))
                 {
-                    m_devices.erase(it++);
+                    it = m_devices.erase(it);
                     check = true;
+                    continue;
                 }
 
-                if (it == m_devices.end())
-                    break;
+                it++;
             }
 
             if (!check)

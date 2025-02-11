@@ -110,13 +110,15 @@ User Controller::findUser(const QString &header)
 
 void Controller::clearCodes(void)
 {
-    for (auto it = m_codes.begin(); it != m_codes.end(); it++)
+    for (auto it = m_codes.begin(); it != m_codes.end(); NULL)
     {
         if (it.value()->codeExpire() < QDateTime::currentSecsSinceEpoch())
-            m_codes.erase(it++);
+        {
+            it = m_codes.erase(it);
+            continue;
+        }
 
-        if (it == m_codes.end())
-            break;
+        it++;
     }
 }
 
