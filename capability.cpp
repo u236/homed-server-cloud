@@ -228,7 +228,7 @@ QJsonObject Capabilities::ThermostatPower::action(const QJsonObject &json)
 
 Capabilities::ThermostatMode::ThermostatMode(const QList <QVariant> &list, ThermostatPower *power) : CapabilityObject("devices.capabilities.mode"), m_power(power), m_value(list.first())
 {
-    QList <QVariant> check = {"cool", "heat", "dry", "fan"}, modes;
+    QList <QVariant> check = {"auto", "cool", "heat", "dry", "fan"}, modes;
 
     for (int i = 0; i < list.count(); i++)
     {
