@@ -217,7 +217,7 @@ void Client::parseExposes(const Endpoint &endpoint)
         endpoint->properties().insert("illuminance", Property(new Properties::Illuminance));
     }
 
-    // water metet
+    // water meter
 
     if (endpoint->exposes().contains("volume"))
     {
@@ -529,7 +529,7 @@ void Client::readyRead(void)
 
         m_buffer.append(data); // TODO: check for overflow
 
-        while((length = m_buffer.indexOf(0x43)) > 0)
+        while ((length = m_buffer.indexOf(0x43)) > 0)
         {
             for (int i = 0; i < length; i++)
             {
