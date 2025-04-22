@@ -63,7 +63,7 @@ QJsonObject Capabilities::Brightness::action(const QJsonObject &json)
     return {{"level", round(value < 2.55 ? 2.55 : value > 255 ? 255 : value)}};
 }
 
-Capabilities::Color::Color(const QMap <QString, QVariant> &options) : CapabilityObject("devices.capabilities.color_setting"), m_rgb(false)
+Capabilities::Color::Color(const QMap <QString, QVariant> &options) : CapabilityObject("devices.capabilities.color_setting"), m_colorMode(false)
 {
     QList <QVariant> list = options.value("light").toList();
 
@@ -92,7 +92,6 @@ Capabilities::Color::Color(const QMap <QString, QVariant> &options) : Capability
     {
         m_parameters.insert("color_model", "rgb");
         m_data.insert("color", QVariant());
-        m_rgb = true;
     }
 
     if (list.contains("colorTemperature"))
@@ -113,11 +112,16 @@ Capabilities::Color::Color(const QMap <QString, QVariant> &options) : Capability
         m_parameters.insert("temperature_k", range);
         m_data.insert("colorTemperature", QVariant());
     }
+
+    if (list.contains("colorMode"))
+        m_data.insert("colorMode", QVariant());
 }
 
 QJsonObject Capabilities::Color::state(void)
 {
-    if (m_rgb)
+    m_colorMode = m_data.value("colorMode", m_colorMode).toBool();
+
+    if (m_colorMode)
     {
         QList <QVariant> list = m_data.value("color").toList();
         int value = list.value(0).toInt() << 16 | list.value(1).toInt() << 8 | list.value(2).toInt();
@@ -142,9 +146,9 @@ QJsonObject Capabilities::Color::state(void)
 
 QJsonObject Capabilities::Color::action(const QJsonObject &json)
 {
-    m_rgb = json.value("instance").toString() == "rgb" ? true : false;
+    m_colorMode = json.value("instance").toString() == "rgb" ? true : false;
 
-    if (m_rgb)
+    if (m_colorMode)
     {
         int value = json.value("value").toInt();
         RGB rgb;

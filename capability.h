@@ -110,8 +110,8 @@ namespace Capabilities
 
         struct RGB { int r, g, b; };
 
-        bool m_rgb;
         QMap <int, int> m_colors;
+        bool m_colorMode;
 
         RGB parse(int value);
         int distance(RGB a, RGB b);
