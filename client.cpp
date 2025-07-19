@@ -68,6 +68,12 @@ void Client::parseExposes(const Endpoint &endpoint)
         endpoint->capabilities().append(Capability(new Capabilities::Switch));
     }
 
+    if (endpoint->exposes().contains("lock"))
+    {
+        endpoint->setType(endpoint->options().value("lock").toString() == "valve" ? "devices.types.openable.valve" : "devices.types.openable");
+        endpoint->capabilities().append(Capability(new Capabilities::Switch));
+    }
+
     if (endpoint->exposes().contains("light"))
     {
         QList <QVariant> list = endpoint->options().value("light").toList();
