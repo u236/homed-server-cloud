@@ -431,6 +431,8 @@ void Client::parseData(QByteArray &buffer)
                         device->endpoints().insert(id, endpoint);
                     }
 
+                    endpoint->setType(options.value("yandexType").toString());
+
                     if (!endpoint->exposes().contains(expose))
                         endpoint->exposes().append(expose);
 
