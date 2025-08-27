@@ -57,7 +57,7 @@ Controller::Controller(QObject *parent) : QObject(parent), m_db(QSqlDatabase::ad
     if (!m_rrdPath.isEmpty())
         m_statsTimer->start(10000);
 
-    qDebug() << "Cloud server started";
+    qDebug() << "Cloud server listening on port" << m_server->serverPort();
 }
 
 Controller::~Controller()
@@ -459,16 +459,16 @@ void Controller::requestReceived(Request &request)
 
             for (auto it = client->devices().begin(); it != client->devices().end(); it++)
             {
-                const Device device = it.value();
+                const Device &device = it.value();
 
                 for (auto it = device->endpoints().begin(); it != device->endpoints().end(); it++)
                 {
-                    const Endpoint endpoint = it.value();
+                    const Endpoint &endpoint = it.value();
                     QJsonArray capabilities, properties;
 
                     for (int i = 0; i < endpoint->capabilities().count(); i++)
                     {
-                        const Capability capability = endpoint->capabilities().at(i);
+                        const Capability &capability = endpoint->capabilities().at(i);
                         QJsonObject item = {{"type", capability->type()}, {"retrievable", true}, {"reportable", true}, {"state", capability->state()}};
 
                         if (!capability->parameters().isEmpty())
@@ -563,7 +563,7 @@ void Controller::requestReceived(Request &request)
 
                     for (int i = 0; i < endpoint->capabilities().count(); i++)
                     {
-                        const Capability capability = endpoint->capabilities().at(i);
+                        const Capability &capability = endpoint->capabilities().at(i);
                         capabilities.append(QJsonObject {{"type", capability->type()}, {"state", capability->state()}});
                     }
 
@@ -645,7 +645,7 @@ void Controller::requestReceived(Request &request)
 
                             for (int i = 0; i < endpoint->capabilities().count(); i++)
                             {
-                                const Capability capability = endpoint->capabilities().at(i);
+                                const Capability &capability = endpoint->capabilities().at(i);
 
                                 if (capability->type() == type)
                                 {

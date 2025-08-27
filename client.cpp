@@ -479,7 +479,7 @@ void Client::parseData(QByteArray &buffer)
                 if (!endpoint.isNull())
                 {
                     QString name = itemList.value(0);
-                    const Property property = endpoint->properties().value(name);
+                    const Property &property = endpoint->properties().value(name);
 
                     for (int i = 0; i < endpoint->capabilities().count(); i++)
                     {

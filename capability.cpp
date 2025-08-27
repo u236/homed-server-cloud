@@ -50,7 +50,7 @@ Capabilities::Brightness::Brightness(void) : CapabilityObject("devices.capabilit
 
 QJsonObject Capabilities::Brightness::state(void)
 {
-    return QJsonObject {{"instance", "brightness"}, {"value", round(m_data.value("level").toDouble() / 2.55)}};
+    return QJsonObject {{"instance", "brightness"}, {"value", round(m_data.value("level").toInt() / 2.55)}};
 }
 
 QJsonObject Capabilities::Brightness::action(const QJsonObject &json)
