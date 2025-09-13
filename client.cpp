@@ -70,7 +70,7 @@ void Client::parseExposes(const Endpoint &endpoint)
 
     if (endpoint->exposes().contains("lock"))
     {
-        endpoint->setType(endpoint->options().value("lock").toString() == "valve" ? "devices.types.openable.valve" : "devices.types.openable");
+        endpoint->setType(endpoint->options().value("lock").toString() == "valve" ? "devices.types.openable.valve" : "devices.types.openable.door_lock");
         endpoint->capabilities().append(Capability(new Capabilities::Switch));
     }
 
