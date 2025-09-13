@@ -2,7 +2,7 @@
 #include <QRandomGenerator>
 #include "controller.h"
 
-Controller::Controller(QObject *parent) : QObject(parent), m_db(QSqlDatabase::addDatabase("QSQLITE")), m_settings(new QSettings("/etc/homed/homed-cloud-server.conf", QSettings::IniFormat, this)), m_codeTimer(new QTimer(this)), m_statsTimer(new QTimer(this)), m_server(new QTcpServer(this)), m_http(new HTTP(m_settings, this)), m_aes(new AES128), m_apiCount(0), m_eventCount(0)
+Controller::Controller(QObject *parent) : QObject(parent), m_db(QSqlDatabase::addDatabase("QSQLITE")), m_settings(new QSettings("/etc/homed/homed-staging-server.conf", QSettings::IniFormat, this)), m_codeTimer(new QTimer(this)), m_statsTimer(new QTimer(this)), m_server(new QTcpServer(this)), m_http(new HTTP(m_settings, this)), m_aes(new AES128), m_apiCount(0), m_eventCount(0)
 {
     QSqlQuery query(m_db);
 
@@ -80,6 +80,7 @@ void Controller::storeTokens(const User &user)
 {
     QSqlQuery query(m_db);
     query.exec(QString("UPDATE users SET accessToken = '%1', refreshToken = '%2', tokenExpire = %3, timestamp = %4 WHERE name = '%5'").arg(user->accessToken().toHex(), user->refreshToken().toHex()).arg(user->tokenExpire()).arg(QDateTime::currentSecsSinceEpoch()).arg(user->name().constData()));
+    qDebug() << user->name() << user->accessToken().toHex(':') << user->refreshToken().toHex(':');
 }
 
 User Controller::findUser(const QByteArray &name)
@@ -359,6 +360,8 @@ void Controller::requestReceived(Request &request)
             refreshToken = QByteArray::fromHex(request.data().value("refresh_token").toUtf8());
             aes.cbcDecrypt(refreshToken);
 
+            qDebug() << "refresh:" << refreshToken.toHex(':');
+
             for (auto it = m_users.begin(); it != m_users.end(); it++)
             {
                 if (it.value()->refreshToken() == refreshToken)
@@ -508,8 +511,8 @@ void Controller::requestReceived(Request &request)
 
         json = {{"request_id", request.headers().value("X-Request-Id")}, {"payload", QJsonObject {{"user_id", user->name().constData()}, {"devices", devices}}}};
 
-        if (m_debug)
-            qDebug() << user->name() << "devices data" << QJsonDocument(json).toJson(QJsonDocument::Compact).constData();
+        // if (m_debug)
+        //     qDebug() << user->name() << "devices data" << QJsonDocument(json).toJson(QJsonDocument::Compact).constData();
 
         m_http->sendResponse(request, 200, {{"Content-Type", "application/json"}}, QJsonDocument(json).toJson(QJsonDocument::Compact));
         m_apiCount++;
@@ -588,7 +591,7 @@ void Controller::requestReceived(Request &request)
         if (m_debug)
         {
             qDebug() << user->name() << "query reqest:" << request.body().toUtf8().constData();
-            qDebug() << user->name() << "query reply:" << QJsonDocument(json).toJson(QJsonDocument::Compact).constData();
+            // qDebug() << user->name() << "query reply:" << QJsonDocument(json).toJson(QJsonDocument::Compact).constData();
         }
 
         m_http->sendResponse(request, 200, {{"Content-Type", "application/json"}}, QJsonDocument(json).toJson(QJsonDocument::Compact));
@@ -673,7 +676,7 @@ void Controller::requestReceived(Request &request)
         if (m_debug)
         {
             qDebug() << user->name() << "action reqest:" << request.body().toUtf8().constData();
-            qDebug() << user->name() << "action reply:" << QJsonDocument(json).toJson(QJsonDocument::Compact).constData();
+            // qDebug() << user->name() << "action reply:" << QJsonDocument(json).toJson(QJsonDocument::Compact).constData();
         }
 
         m_http->sendResponse(request, 200, {{"Content-Type", "application/json"}}, QJsonDocument(json).toJson(QJsonDocument::Compact));

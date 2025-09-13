@@ -17,5 +17,5 @@ HEADERS += \
     crypto.h \
     http.h
 
-target.path = /home/u236
+target.path = /home/u236/staging
 INSTALLS += target

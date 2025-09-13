@@ -31,6 +31,8 @@ void HTTP::sendResponse(Request &request, quint16 code, const QMap <QString, QSt
     for (auto it = headers.begin(); it != headers.end(); it++)
         buffer.append(QString("\r\n%1: %2").arg(it.key(), it.value()).toUtf8());
 
+    qDebug() << code;
+
     request.socket()->write(buffer.append("\r\n\r\n").append(response));
     request.socket()->close();
 }
@@ -68,5 +70,6 @@ void HTTP::readyRead(void)
 
     }
 
+    qDebug() << request.url();
     emit requestReceived(request);
 }
