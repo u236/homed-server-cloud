@@ -11,7 +11,7 @@ HTTP::HTTP(QSettings *settings, QObject *parent) : QObject(parent), m_server(new
         return;
     }
 
-    qDebug() << "HTTP server listening on port" << m_server->serverPort();;
+    qDebug() << "HTTP server listening on port" << m_server->serverPort();
 }
 
 void HTTP::sendResponse(Request &request, quint16 code, const QMap <QString, QString> &headers, const QByteArray &response)
