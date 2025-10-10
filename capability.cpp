@@ -321,6 +321,36 @@ QJsonObject Capabilities::FanMode::action(const QJsonObject &json)
     return {{"fanMode", json.value("value").toString()}};
 }
 
+Capabilities::SwingMode::SwingMode(const QList <QVariant> &list) : CapabilityObject("devices.capabilities.mode")
+{
+    QList <QVariant> check = {"stationary", "horizontal", "vertical"}, modes;
+
+    for (int i = 0; i < list.count(); i++)
+    {
+        QVariant value = list.at(i);
+
+        if (!check.contains(value))
+            continue;
+
+        modes.append(QMap <QString, QVariant> {{"value", value}});
+    }
+
+    m_parameters.insert("instance", "swing");
+    m_parameters.insert("modes", modes);
+
+    m_data.insert("swingMode", QVariant());
+}
+
+QJsonObject Capabilities::SwingMode::state(void)
+{
+    return QJsonObject {{"instance", "swing"}, {"value", m_data.value("swingMode").toString()}};
+}
+
+QJsonObject Capabilities::SwingMode::action(const QJsonObject &json)
+{
+    return {{"swingMode", json.value("value").toString()}};
+}
+
 Properties::Button::Button(const QList <QVariant> &actions) : PropertyObject("devices.properties.event", "button")
 {
     if (actions.contains("singleClick"))

@@ -194,6 +194,17 @@ namespace Capabilities
         QJsonObject action(const QJsonObject &json) override;
 
     };
+
+    class SwingMode : public CapabilityObject
+    {
+
+    public:
+
+        SwingMode(const QList <QVariant> &list);
+        QJsonObject state(void) override;
+        QJsonObject action(const QJsonObject &json) override;
+
+    };
 };
 
 namespace Properties
