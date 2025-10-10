@@ -24,7 +24,7 @@ void PropertyObject::addEvents(void)
     m_parameters.insert("events", events);
 }
 
-Capabilities::Switch::Switch(void) : CapabilityObject("devices.capabilities.on_off")
+Capabilities::Switch::Switch(void) : CapabilityObject("devices.capabilities.on_off", "on")
 {
     m_data.insert("status", QVariant());
 }
@@ -39,7 +39,7 @@ QJsonObject Capabilities::Switch::action(const QJsonObject &json)
     return {{"status", json.value("value").toBool() ? "on" : "off"}};
 }
 
-Capabilities::Brightness::Brightness(void) : CapabilityObject("devices.capabilities.range")
+Capabilities::Brightness::Brightness(void) : CapabilityObject("devices.capabilities.range", "brightness")
 {
     m_parameters.insert("instance", "brightness");
     m_parameters.insert("range", QMap <QString, QVariant> {{"min", 1}, {"max", 100}});
@@ -63,7 +63,7 @@ QJsonObject Capabilities::Brightness::action(const QJsonObject &json)
     return {{"level", round(value < 2.55 ? 2.55 : value > 255 ? 255 : value)}};
 }
 
-Capabilities::Color::Color(const QMap <QString, QVariant> &options) : CapabilityObject("devices.capabilities.color_setting"), m_colorMode(false)
+Capabilities::Color::Color(const QMap <QString, QVariant> &options) : CapabilityObject("devices.capabilities.color_setting", {"rgb", "temperature_k"}), m_colorMode(false)
 {
     QList <QVariant> list = options.value("light").toList();
 
@@ -176,7 +176,7 @@ int Capabilities::Color::distance(RGB a, RGB b)
     return abs(sqrt(pow(a.r - b.r, 2) + pow(a.g - b.g, 2) + pow(a.b - b.b, 2)));
 }
 
-Capabilities::Curtain::Curtain(void) : CapabilityObject("devices.capabilities.on_off")
+Capabilities::Curtain::Curtain(void) : CapabilityObject("devices.capabilities.on_off", "on")
 {
     m_data.insert("cover", QVariant());
 }
@@ -191,7 +191,7 @@ QJsonObject Capabilities::Curtain::action(const QJsonObject &json)
     return {{"cover", json.value("value").toBool() ? "open" : "close"}};
 }
 
-Capabilities::Open::Open(void) : CapabilityObject("devices.capabilities.range")
+Capabilities::Open::Open(void) : CapabilityObject("devices.capabilities.range", "open")
 {
     m_parameters.insert("instance", "open");
     m_parameters.insert("range", QMap <QString, QVariant> {{"min", 0}, {"max", 100}});
@@ -215,7 +215,7 @@ QJsonObject Capabilities::Open::action(const QJsonObject &json)
     return {{"position", value < 0 ? 0 : value > 100 ? 100 : value}};
 }
 
-Capabilities::ThermostatPower::ThermostatPower(const QVariant &onValue) : CapabilityObject("devices.capabilities.on_off"), m_onValue(onValue)
+Capabilities::ThermostatPower::ThermostatPower(const QVariant &onValue) : CapabilityObject("devices.capabilities.on_off", "on"), m_onValue(onValue)
 {
     m_data.insert("systemMode", QVariant());
 }
@@ -230,7 +230,7 @@ QJsonObject Capabilities::ThermostatPower::action(const QJsonObject &json)
     return {{"systemMode", json.value("value").toBool() ? QJsonValue::fromVariant(m_onValue) : "off"}};
 }
 
-Capabilities::ThermostatMode::ThermostatMode(const QList <QVariant> &list, ThermostatPower *power) : CapabilityObject("devices.capabilities.mode"), m_power(power), m_value(list.first())
+Capabilities::ThermostatMode::ThermostatMode(const QList <QVariant> &list, ThermostatPower *power) : CapabilityObject("devices.capabilities.mode", "thermostat"), m_power(power), m_value(list.first())
 {
     QList <QVariant> check = {"auto", "cool", "heat", "dry", "fan"}, modes;
 
@@ -269,7 +269,7 @@ QJsonObject Capabilities::ThermostatMode::action(const QJsonObject &json)
     return {{"systemMode", value != "fan_only" ? value : "fan"}};
 }
 
-Capabilities::Temperature::Temperature(const QMap <QString, QVariant> &options) : CapabilityObject("devices.capabilities.range")
+Capabilities::Temperature::Temperature(const QMap <QString, QVariant> &options) : CapabilityObject("devices.capabilities.range", "temperature")
 {
     QMap <QString, QVariant> option = options.value("targetTemperature").toMap();
 
@@ -291,7 +291,7 @@ QJsonObject Capabilities::Temperature::action(const QJsonObject &json)
     return {{"targetTemperature", round(json.value("relative").toBool() ? m_data.value("targetTemperature").toDouble() + value : value)}};
 }
 
-Capabilities::FanMode::FanMode(const QList <QVariant> &list) : CapabilityObject("devices.capabilities.mode")
+Capabilities::FanMode::FanMode(const QList <QVariant> &list) : CapabilityObject("devices.capabilities.mode", "fan_speed")
 {
     QList <QVariant> check = {"min", "low", "medium", "high", "max", "auto"}, modes;
 
@@ -321,7 +321,7 @@ QJsonObject Capabilities::FanMode::action(const QJsonObject &json)
     return {{"fanMode", json.value("value").toString()}};
 }
 
-Capabilities::SwingMode::SwingMode(const QList <QVariant> &list) : CapabilityObject("devices.capabilities.mode")
+Capabilities::SwingMode::SwingMode(const QList <QVariant> &list) : CapabilityObject("devices.capabilities.mode", "swing")
 {
     QList <QVariant> check = {"stationary", "horizontal", "vertical"}, modes;
 

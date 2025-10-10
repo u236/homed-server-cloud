@@ -17,10 +17,13 @@ class CapabilityObject
 
 public:
 
-    CapabilityObject(const QString &type) : m_type(type), m_updated(false) {}
+    CapabilityObject(const QString &type, const QList <QString> &instances) : m_type(type), m_instances(instances), m_updated(false) {}
+    CapabilityObject(const QString &type, const QString &instance) : m_type(type), m_instances({instance}), m_updated(false) {}
     virtual ~CapabilityObject(void) {}
 
     inline QString type(void) { return m_type; }
+    inline QList <QString> &instances(void) { return m_instances; }
+
     inline QMap <QString, QVariant> &parameters(void) { return m_parameters; }
     inline QMap <QString, QVariant> &data(void) { return m_data; }
 
@@ -33,7 +36,10 @@ public:
 protected:
 
     QString m_type;
+
+    QList <QString> m_instances;
     QMap <QString, QVariant> m_parameters, m_data;
+
     bool m_updated;
 
 };

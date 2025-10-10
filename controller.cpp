@@ -640,16 +640,16 @@ void Controller::requestReceived(Request &request)
                     {
                         for (auto it = capabilities.begin(); it != capabilities.end(); it++)
                         {
-                            QJsonObject json = it->toObject();
-                            QString type = json.value("type").toString();
+                            QJsonObject json = it->toObject(), state = json.value("state").toObject();
+                            QString type = json.value("type").toString(), instance = state.value("instance").toString();
 
                             for (int i = 0; i < endpoint->capabilities().count(); i++)
                             {
                                 const Capability &capability = endpoint->capabilities().at(i);
 
-                                if (capability->type() == type)
+                                if (capability->type() == type && capability->instances().contains(instance))
                                 {
-                                    client->publish(endpoint, capability->action(json.value("state").toObject()));
+                                    client->publish(endpoint, capability->action(state));
                                     check = true;
                                     break;
                                 }

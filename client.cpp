@@ -270,7 +270,8 @@ void Client::parseExposes(const Endpoint &endpoint)
 
     if (endpoint->exposes().contains("battery"))
         endpoint->properties().insert("battery", Property(new Properties::Battery));
-    else if (endpoint->exposes().contains("batteryLow"))
+
+    if (endpoint->exposes().contains("batteryLow"))
         endpoint->properties().insert("batteryLow", Property(new Properties::Binary("battery_level", "low", "normal")));
 }
 
