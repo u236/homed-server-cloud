@@ -230,7 +230,7 @@ QJsonObject Capabilities::ThermostatPower::action(const QJsonObject &json)
     return {{"systemMode", json.value("value").toBool() ? QJsonValue::fromVariant(m_onValue) : "off"}};
 }
 
-Capabilities::ThermostatMode::ThermostatMode(const QList <QVariant> &list, ThermostatPower *power) : CapabilityObject("devices.capabilities.mode", "thermostat"), m_power(power), m_value(list.first())
+Capabilities::ThermostatMode::ThermostatMode(const QList <QVariant> &list, ThermostatPower *power) : CapabilityObject("devices.capabilities.mode", "thermostat"), m_power(power), m_value(list.value(0))
 {
     QList <QVariant> check = {"auto", "cool", "heat", "dry", "fan"}, modes;
 

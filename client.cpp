@@ -105,7 +105,7 @@ void Client::parseExposes(const Endpoint &endpoint)
         if (list.contains("off"))
         {
             list.removeAll("off");
-            power = new Capabilities::ThermostatPower(list.first());
+            power = new Capabilities::ThermostatPower(list.value(0));
             endpoint->capabilities().append(Capability(power));
         }
 
