@@ -343,21 +343,21 @@ void Client::parseData(QByteArray &buffer)
 
             for (auto it = devices.begin(); it != devices.end(); it++)
             {
-                QJsonObject device = it->toObject();
-                QString name = device.value("name").toString(), id, key;
+                QJsonObject item = it->toObject();
+                QString name = item.value("name").toString(), id, key;
 
-                if (name.isEmpty() || device.value("removed").toBool() || !device.value("cloud").toBool(true) || name == "HOMEd Coordinator")
+                if (name.isEmpty() || item.value("removed").toBool() || !item.value("cloud").toBool(true) || name == "HOMEd Coordinator")
                     continue;
 
                 switch (m_types.indexOf(type))
                 {
-                    case 0: id = device.value("ieeeAddress").toString(); break; // zigbee
-                    case 1: id = QString("%1.%2").arg(device.value("portId").toInt()).arg(device.value("slaveId").toInt()); break; // modbus
-                    case 2: id = device.value("id").toString(); break; // custom
+                    case 0: id = item.value("ieeeAddress").toString(); break;                                                  // zigbee
+                    case 1: id = QString("%1.%2").arg(item.value("portId").toInt()).arg(item.value("slaveId").toInt()); break; // modbus
+                    case 2: id = item.value("id").toString(); break;                                                           // custom
                 }
 
                 key = QString("%1/%2").arg(type, id);
-                map.insert(key, Device(new DeviceObject(key, QString("%1/%2").arg(service, names ? name : id), name, device.value("description").toString())));
+                map.insert(key, Device(new DeviceObject(key, QString("%1/%2").arg(service, names ? name : id), name, item.value("description").toString())));
             }
 
             for (auto it = map.begin(); it != map.end(); it++)
@@ -465,7 +465,7 @@ void Client::parseData(QByteArray &buffer)
             if (device.isNull())
                 return;
 
-            device->setAvailable(message.value("status").toString() == "online" ? true : false);
+            device->setAvailable(message.value("status").toString() == "online");
         }
         else if (topic.startsWith("fd/"))
         {

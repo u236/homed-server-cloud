@@ -31,7 +31,7 @@ Capabilities::Switch::Switch(void) : CapabilityObject("devices.capabilities.on_o
 
 QJsonObject Capabilities::Switch::state(void)
 {
-    return {{"instance", "on"}, {"value", m_data.value("status").toString() == "on" ? true : false}};
+    return {{"instance", "on"}, {"value", m_data.value("status").toString() == "on"}};
 }
 
 QJsonObject Capabilities::Switch::action(const QJsonObject &json)
@@ -146,7 +146,7 @@ QJsonObject Capabilities::Color::state(void)
 
 QJsonObject Capabilities::Color::action(const QJsonObject &json)
 {
-    m_colorMode = json.value("instance").toString() == "rgb" ? true : false;
+    m_colorMode = json.value("instance").toString() == "rgb";
 
     if (m_colorMode)
     {
@@ -183,7 +183,7 @@ Capabilities::Curtain::Curtain(void) : CapabilityObject("devices.capabilities.on
 
 QJsonObject Capabilities::Curtain::state(void)
 {
-    return {{"instance", "on"}, {"value", m_data.value("cover").toString() == "open" ? true : false}};
+    return {{"instance", "on"}, {"value", m_data.value("cover").toString() == "open"}};
 }
 
 QJsonObject Capabilities::Curtain::action(const QJsonObject &json)
@@ -222,7 +222,7 @@ Capabilities::ThermostatPower::ThermostatPower(const QVariant &onValue) : Capabi
 
 QJsonObject Capabilities::ThermostatPower::state(void)
 {
-    return {{"instance", "on"}, {"value", m_data.value("systemMode").toString() != "off" ? true : false}};
+    return {{"instance", "on"}, {"value", m_data.value("systemMode").toString() != "off"}};
 }
 
 QJsonObject Capabilities::ThermostatPower::action(const QJsonObject &json)
