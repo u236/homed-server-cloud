@@ -265,6 +265,9 @@ void Client::parseExposes(const Endpoint &endpoint)
     if (endpoint->exposes().contains("fanMode"))
         endpoint->capabilities().append(Capability(new Capabilities::FanMode(endpoint->options().value("fanMode").toMap().value("enum").toList())));
 
+    if (endpoint->exposes().contains("heatMode"))
+        endpoint->capabilities().append(Capability(new Capabilities::HeatMode(endpoint->options().value("heatMode").toMap().value("enum").toList())));
+
     if (endpoint->exposes().contains("swingMode"))
         endpoint->capabilities().append(Capability(new Capabilities::SwingMode(endpoint->options().value("swingMode").toMap().value("enum").toList())));
 

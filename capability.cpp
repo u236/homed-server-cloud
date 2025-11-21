@@ -321,6 +321,36 @@ QJsonObject Capabilities::FanMode::action(const QJsonObject &json)
     return {{"fanMode", json.value("value").toString()}};
 }
 
+Capabilities::HeatMode::HeatMode(const QList <QVariant> &list) : CapabilityObject("devices.capabilities.mode", "heat")
+{
+    QList <QVariant> check = {"min", "normal", "turbo", "max", "auto"}, modes;
+
+    for (int i = 0; i < list.count(); i++)
+    {
+        QVariant value = list.at(i);
+
+        if (!check.contains(value))
+            continue;
+
+        modes.append(QMap <QString, QVariant> {{"value", value}});
+    }
+
+    m_parameters.insert("instance", "heat");
+    m_parameters.insert("modes", modes);
+
+    m_data.insert("heatMode", QVariant());
+}
+
+QJsonObject Capabilities::HeatMode::state(void)
+{
+    return QJsonObject {{"instance", "heat"}, {"value", m_data.value("heatMode").toString()}};
+}
+
+QJsonObject Capabilities::HeatMode::action(const QJsonObject &json)
+{
+    return {{"heatMode", json.value("value").toString()}};
+}
+
 Capabilities::SwingMode::SwingMode(const QList <QVariant> &list) : CapabilityObject("devices.capabilities.mode", "swing")
 {
     QList <QVariant> check = {"stationary", "horizontal", "vertical"}, modes;

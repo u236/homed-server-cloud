@@ -201,6 +201,17 @@ namespace Capabilities
 
     };
 
+    class HeatMode : public CapabilityObject
+    {
+
+    public:
+
+        HeatMode(const QList <QVariant> &list);
+        QJsonObject state(void) override;
+        QJsonObject action(const QJsonObject &json) override;
+
+    };
+
     class SwingMode : public CapabilityObject
     {
 
