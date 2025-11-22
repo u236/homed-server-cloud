@@ -288,7 +288,7 @@ QJsonObject Capabilities::Temperature::state(void)
 QJsonObject Capabilities::Temperature::action(const QJsonObject &json)
 {
     double value = json.value("value").toDouble();
-    return {{"targetTemperature", round(json.value("relative").toBool() ? m_data.value("targetTemperature").toDouble() + value : value)}};
+    return {{"targetTemperature", json.value("relative").toBool() ? m_data.value("targetTemperature").toDouble() + value : value}};
 }
 
 Capabilities::FanMode::FanMode(const QList <QVariant> &list) : CapabilityObject("devices.capabilities.mode", "fan_speed")
