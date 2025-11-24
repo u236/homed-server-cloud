@@ -100,6 +100,12 @@ Capabilities::Color::Color(const QMap <QString, QVariant> &options) : Capability
         QList <quint16> list = {1500, 2700, 3400, 4500, 5600, 6500, 7500, 9000};
         double min = option.contains("max") ? round(1e6 / option.value("max").toDouble()) : 1500, max = option.contains("min") ? round(1e6 / option.value("min").toDouble()) : 9000;
 
+        if (min < 1500)
+            min = 1500;
+
+        if (max > 9000)
+            max = 9000;
+
         for (int i = 0; i < list.count() - 1; i++)
         {
             if (list.at(i) <= min && list.at(i + 1) > min)
