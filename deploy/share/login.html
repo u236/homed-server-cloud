@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Mono">
+    <style type="text/css">
+
+    body {
+        margin: 0;
+        background-color: #111111;
+    }
+
+    a {
+        display: block;
+        margin-top: 25px;
+        text-align: center;
+        text-decoration: none;
+        font-family: 'Roboto Mono';
+        font-size: 14px;
+        font-weight: 400;
+        color: #999999;
+    }
+
+    a:hover {
+        color: #dddddd;
+    }
+
+    img {
+        display: block;
+        width: 150px;
+        margin: 50px auto;
+    }
+
+    input[type="text"] {
+        -moz-appearance: none;
+        -webkit-appearance: none;
+        box-sizing: border-box;
+        width: 100%;
+        height: 40px;
+        margin-bottom: 15px;
+        padding: 0 10px;
+        background-color: #333333;
+        border: 1px solid #555555;
+        border-radius: 5px;
+        font-family: 'Roboto Mono';
+        font-size: 14px;
+        font-weight: 400;
+        color: #dddddd;
+    }
+
+    button {
+        width: 100%;
+        height: 40px;
+        background-color: #fcb040;
+        border: 1px solid #555555;
+        border-radius: 5px;
+        font-family: 'Roboto Mono';
+        font-size: 14px;
+        font-weight: 400;
+        color: #111111;
+        cursor: pointer;
+    }
+
+    #content {
+        width: 300px;
+        margin: 0px auto;
+    }
+
+    </style>
+    <title>HOMEd Cloud</title>
+</head>
+<body>
+    <div id="content">
+        <img src="logo.png">
+        <form action="/login" method="post">
+            <input type="hidden" name="client_id" value="%1">
+            <input type="hidden" name="redirect_uri" value="%2">
+            <input type="hidden" name="state" value="%3">
+            <input type="text" name="username" placeholder="Username" value="%4"><br>
+            <input type="text" name="password" placeholder="Password" value="%5"><br>
+            <button type="submit">Login</button>
+        </form>
+        <a href="https://t.me/homedCloudBot" target="_blank">Get credentials</a>
+    </div>
+</body>
+</html>
