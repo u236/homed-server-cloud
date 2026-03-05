@@ -1,3 +1,4 @@
+#include <QTimer>
 #include <QUrl>
 #include "http.h"
 
@@ -38,7 +39,14 @@ void HTTP::sendResponse(Request &request, quint16 code, const QMap <QString, QSt
 void HTTP::newConnection(void)
 {
     QTcpSocket *socket = m_server->nextPendingConnection();
+    QTimer *timer = new QTimer(socket);
+
     connect(socket, &QTcpSocket::readyRead, this, &HTTP::readyRead);
+    connect(socket, &QTcpSocket::disconnected, socket, &QTcpSocket::deleteLater);
+    connect(timer, &QTimer::timeout, socket, &QTcpSocket::close);
+
+    timer->setSingleShot(true);
+    timer->start(HTTP_REQUEST_TIMEOUT);
 }
 
 void HTTP::readyRead(void)

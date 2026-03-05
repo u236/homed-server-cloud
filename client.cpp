@@ -523,6 +523,12 @@ void Client::readyRead(void)
         quint32 value, key;
         DH dh;
 
+        if (data.length() < sizeof(hanshake))
+        {
+            m_socket->close();
+            return;
+        }
+
         memcpy(&hanshake, data.constData(), sizeof(hanshake));
 
         dh.setPrime(qFromBigEndian(hanshake.prime));
@@ -542,7 +548,13 @@ void Client::readyRead(void)
         QByteArray buffer;
         int length;
 
-        m_buffer.append(data); // TODO: check for overflow
+        m_buffer.append(data);
+
+        if (m_buffer.length() > MAX_BUFFER_SIZE)
+        {
+            m_socket->close();
+            return;
+        }
 
         while ((length = m_buffer.indexOf(0x43)) > 0)
         {
