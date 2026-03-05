@@ -27,6 +27,7 @@ Controller::Controller(QObject *parent) : QObject(parent), m_db(QSqlDatabase::ad
     m_skillId = m_settings->value("skill/id").toByteArray();
     m_skillToken = m_settings->value("skill/token").toByteArray();
     m_botToken = m_settings->value("bot/token").toByteArray();
+    m_botSecret = m_settings->value("bot/secret").toByteArray();
     m_rrdPath = m_settings->value("rrd/path").toByteArray();
 
     m_aes->init(m_clientSecret, QCryptographicHash::hash(m_clientSecret, QCryptographicHash::Md5));
@@ -150,6 +151,12 @@ void Controller::requestReceived(Request &request)
     if (request.url() == "/telegram")
     {
         QJsonObject json = QJsonDocument::fromJson(request.body().toUtf8()).object().value("message").toObject(), chat = json.value("chat").toObject(), from = json.value("from").toObject();
+
+        if (!m_botSecret.isEmpty() && request.headers().value("X-Telegram-Bot-Api-Secret-Token") != m_botSecret)
+        {
+            m_http->sendResponse(request, 403);
+            return;
+        }
 
         if (chat.value("type").toString() == "private" && !from.value("is_bot").toBool())
         {
