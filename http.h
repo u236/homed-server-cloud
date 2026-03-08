@@ -1,7 +1,7 @@
 #ifndef HTTP_H
 #define HTTP_H
 
-#define HTTP_REQUEST_TIMEOUT    10000
+#define HTTP_REQUEST_TIMEOUT    5000
 
 #include <QSettings>
 #include <QTcpServer>

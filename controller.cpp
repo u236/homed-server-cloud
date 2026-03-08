@@ -268,7 +268,7 @@ void Controller::requestReceived(Request &request)
             if (!message.isEmpty())
             {
                 QJsonObject json = {{"chat_id", id}, {"parse_mode", "Markdown"}, {"text", message}};
-                system(QString("curl --http1.1 -X POST -H 'Content-Type: application/json' -d '%1' -s https://api.telegram.org/bot%2/sendMessage > /dev/null &").arg(QJsonDocument(json).toJson(QJsonDocument::Compact), m_botToken).toUtf8().constData());
+                system(QString("curl --http1.1 -m 5 -X POST -H 'Content-Type: application/json' -d '%1' -s https://api.telegram.org/bot%2/sendMessage > /dev/null &").arg(QJsonDocument(json).toJson(QJsonDocument::Compact), m_botToken).toUtf8().constData());
             }
         }
 
@@ -742,7 +742,7 @@ void Controller::devicesUpdated(void)
     if (user)
     {
         QJsonObject json = {{"ts", QDateTime::currentSecsSinceEpoch()}, {"payload", QJsonObject {{"user_id", user->name().constData()}}}};
-        system(QString("curl --http1.1 -X POST -H 'Authorization: OAuth %1' -H 'Content-Type: application/json' -d '%2' -s https://dialogs.yandex.net/api/v1/skills/%3/callback/discovery > /dev/null &").arg(m_skillToken, QJsonDocument(json).toJson(QJsonDocument::Compact).constData(), m_skillId).toUtf8().constData());
+        system(QString("curl --http1.1 -m 5 -X POST -H 'Authorization: OAuth %1' -H 'Content-Type: application/json' -d '%2' -s https://dialogs.yandex.net/api/v1/skills/%3/callback/discovery > /dev/null &").arg(m_skillToken, QJsonDocument(json).toJson(QJsonDocument::Compact).constData(), m_skillId).toUtf8().constData());
         m_eventCount++;
     }
 }
@@ -800,7 +800,7 @@ void Controller::dataUpdated(const Device &device)
     if (!devices.isEmpty())
     {
         json.insert("payload", QJsonObject {{"user_id", user->name().constData()}, {"devices", devices}});
-        system(QString("curl --http1.1 -X POST -H 'Authorization: OAuth %1' -H 'Content-Type: application/json' -d '%2' -s https://dialogs.yandex.net/api/v1/skills/%3/callback/state > /dev/null &").arg(m_skillToken, QJsonDocument(json).toJson(QJsonDocument::Compact).constData(), m_skillId).toUtf8().constData());
+        system(QString("curl --http1.1 -m 5 -X POST -H 'Authorization: OAuth %1' -H 'Content-Type: application/json' -d '%2' -s https://dialogs.yandex.net/api/v1/skills/%3/callback/state > /dev/null &").arg(m_skillToken, QJsonDocument(json).toJson(QJsonDocument::Compact).constData(), m_skillId).toUtf8().constData());
         m_eventCount++;
     }
 }
