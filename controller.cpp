@@ -143,7 +143,8 @@ void Controller::updateStats(void)
     system(QString("rrdcreate %1/event.rrd --no-overwrite --step 10 DS:data:GAUGE:3600:U:U RRA:AVERAGE:0.5:1:8640 RRA:AVERAGE:0.5:60:1008 RRA:AVERAGE:0.5:360:744 RRA:AVERAGE:0.5:2160:1460 > /dev/null &").arg(m_rrdPath.constData()).toUtf8());
     system(QString("rrdupdate %1/event.rrd %2:%3 > /dev/null &").arg(m_rrdPath.constData()).arg(time - time % 10).arg(m_eventCount).toUtf8());
 
-    qDebug() << QString("Clients: %1, used descriptors: %2").arg(clients).arg(QDir("/proc/self/fd").count() - 2);
+    if (time % 60 < 10)
+        qDebug() << QString("Clients: %1, used descriptors: %2").arg(clients).arg(QDir("/proc/self/fd").count() - 2);
 
     m_apiCount = 0;
     m_eventCount = 0;
