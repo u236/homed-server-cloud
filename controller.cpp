@@ -748,6 +748,7 @@ void Controller::tokenReceived(const QByteArray &token)
 
         if (other)
         {
+            it.value()->clients().remove(client->uniqueId());
             other->close();
             other->deleteLater();
             check = true;
