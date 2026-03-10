@@ -709,7 +709,7 @@ void Controller::disconnected(void)
     Client *client = reinterpret_cast <Client*> (sender());
     UserObject *user = reinterpret_cast <UserObject*> (client->parent());
 
-    if (user)
+    if (user && user->clients().value(client->uniqueId()) == client)
     {
         qDebug() << "Client" << QString("%1:%2").arg(user->name(), client->uniqueId()) << "disconnected";
         user->clients().remove(client->uniqueId());
@@ -724,10 +724,20 @@ void Controller::tokenReceived(const QByteArray &token)
 
     for (auto it = m_users.begin(); it != m_users.end(); it++)
     {
+        Client *other = it.value()->clients().value(client->uniqueId());
+        bool check = false;
+
         if (it.value()->clientToken() != token)
             continue;
 
-        qDebug() << "Client" << QString("%1:%2").arg(it.value()->name(), client->uniqueId()) << "authorized";
+        if (other)
+        {
+            other->close();
+            other->deleteLater();
+            check = true;
+        }
+
+        qDebug() << "Client" << QString("%1:%2").arg(it.value()->name(), client->uniqueId()) << (check ? "replaced" : "authorized");
         client->setParent(it.value().data());
         it.value()->clients().insert(client->uniqueId(), client);
         break;

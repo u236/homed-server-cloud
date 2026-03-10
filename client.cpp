@@ -1,3 +1,4 @@
+#include <netinet/tcp.h>
 #include <QtEndian>
 #include <QCryptographicHash>
 #include <QDateTime>
@@ -6,7 +7,15 @@
 
 Client::Client(QTcpSocket *socket) : QObject(nullptr), m_socket(socket), m_timer(new QTimer(this)), m_aes(new AES128), m_status(Status::Handshake)
 {
+    int descriptor = m_socket->socketDescriptor(), keepAlive = 1, interval = 10, count = 3;
+
     m_types = {"zigbee", "modbus", "custom"};
+    m_socket->setParent(this);
+
+    setsockopt(descriptor, SOL_SOCKET, SO_KEEPALIVE, &keepAlive, sizeof(keepAlive));
+    setsockopt(descriptor, SOL_TCP, TCP_KEEPIDLE, &interval, sizeof(interval));
+    setsockopt(descriptor, SOL_TCP, TCP_KEEPINTVL, &interval, sizeof(interval));
+    setsockopt(descriptor, SOL_TCP, TCP_KEEPCNT, &count, sizeof(count));
 
     connect(m_socket, &QTcpSocket::readyRead, this, &Client::readyRead);
     connect(m_socket, &QTcpSocket::disconnected, this, &Client::disconnected);
@@ -46,7 +55,7 @@ void Client::publish(const Endpoint &endpoint, const QJsonObject &json)
 
 void Client::close(void)
 {
-    m_socket->close();
+    m_socket->abort();
 }
 
 Device Client::findDevice(const QString &search)
