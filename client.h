@@ -104,6 +104,7 @@ public:
     Client(QTcpSocket *socket);
     ~Client(void);
 
+    inline QAbstractSocket::SocketError socketError(void) { return m_socket->error(); }
     inline QString uniqueId(void) { return m_uniqueId; }
     inline QMap <QString, Device> &devices(void) { return m_devices; }
 

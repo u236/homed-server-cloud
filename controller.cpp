@@ -728,7 +728,7 @@ void Controller::disconnected(void)
             check = true;
         }
 
-        qDebug() << "Client" << QString("%1:%2").arg(user->name(), client->uniqueId()) << (check ? "disconnected" : "stale connection closed");
+        qDebug() << "Client" << QString("%1:%2").arg(user->name(), client->uniqueId()) << (check ? "disconnected:" : "stale connection closed:") << client->socketError();
     }
 
     client->deleteLater();
