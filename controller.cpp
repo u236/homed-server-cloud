@@ -1,4 +1,5 @@
 #include <QCryptographicHash>
+#include <QDir>
 #include <QRandomGenerator>
 #include "controller.h"
 
@@ -141,6 +142,8 @@ void Controller::updateStats(void)
 
     system(QString("rrdcreate %1/event.rrd --no-overwrite --step 10 DS:data:GAUGE:3600:U:U RRA:AVERAGE:0.5:1:8640 RRA:AVERAGE:0.5:60:1008 RRA:AVERAGE:0.5:360:744 RRA:AVERAGE:0.5:2160:1460 > /dev/null &").arg(m_rrdPath.constData()).toUtf8());
     system(QString("rrdupdate %1/event.rrd %2:%3 > /dev/null &").arg(m_rrdPath.constData()).arg(time - time % 10).arg(m_eventCount).toUtf8());
+
+    qDebug() << QString("Clients: %1, used descriptors: %2").arg(clients).arg(QDir("/proc/self/fd").count() - 2);
 
     m_apiCount = 0;
     m_eventCount = 0;
@@ -693,7 +696,13 @@ void Controller::requestReceived(Request &request)
 
 void Controller::newConnection(void)
 {
-    Client *client(new Client(m_server->nextPendingConnection()));
+    QTcpSocket *socket = m_server->nextPendingConnection();
+    Client *client;
+
+    if (!socket)
+        return;
+
+    client = new Client(socket);
 
     if (m_debug)
         qDebug() << client << "connected";
@@ -709,10 +718,17 @@ void Controller::disconnected(void)
     Client *client = reinterpret_cast <Client*> (sender());
     UserObject *user = reinterpret_cast <UserObject*> (client->parent());
 
-    if (user && user->clients().value(client->uniqueId()) == client)
+    if (user)
     {
-        qDebug() << "Client" << QString("%1:%2").arg(user->name(), client->uniqueId()) << "disconnected";
-        user->clients().remove(client->uniqueId());
+        bool check = false;
+
+        if (user->clients().value(client->uniqueId()) == client)
+        {
+            user->clients().remove(client->uniqueId());
+            check = true;
+        }
+
+        qDebug() << "Client" << QString("%1:%2").arg(user->name(), client->uniqueId()) << (check ? "disconnected" : "stale connection closed");
     }
 
     client->deleteLater();
