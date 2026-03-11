@@ -3,7 +3,7 @@
 #include <QRandomGenerator>
 #include "controller.h"
 
-Controller::Controller(QObject *parent) : QObject(parent), m_db(QSqlDatabase::addDatabase("QSQLITE")), m_settings(new QSettings("/etc/homed/homed-cloud-server.conf", QSettings::IniFormat, this)), m_codeTimer(new QTimer(this)), m_statsTimer(new QTimer(this)), m_server(new QTcpServer(this)), m_http(new HTTP(m_settings, this)), m_aes(new AES128), m_apiCount(0), m_eventCount(0)
+Controller::Controller(QObject *parent) : QObject(parent), m_db(QSqlDatabase::addDatabase("QSQLITE")), m_settings(new QSettings("/etc/homed/homed-cloud-server.conf", QSettings::IniFormat, this)), m_codeTimer(new QTimer(this)), m_statsTimer(new QTimer(this)), m_server(new QTcpServer(this)), m_http(new HTTP(m_settings, this)), m_aes(new AES128), m_apiCount(0), m_eventCount(0), m_clientCount(0), m_descriptorCount(0)
 {
     QSqlQuery query(m_db);
 
@@ -126,7 +126,8 @@ void Controller::clearCodes(void)
 
 void Controller::updateStats(void)
 {
-    quint64 clients = 0, time = QDateTime::currentSecsSinceEpoch();
+    quint32 clients = 0, descriptors = QDir("/proc/self/fd").count() - 2;
+    quint64 time = QDateTime::currentSecsSinceEpoch();
 
     for (auto it = m_users.begin(); it != m_users.end(); it++)
         clients += it.value()->clients().count();
@@ -143,8 +144,12 @@ void Controller::updateStats(void)
     system(QString("rrdcreate %1/event.rrd --no-overwrite --step 10 DS:data:GAUGE:3600:U:U RRA:AVERAGE:0.5:1:8640 RRA:AVERAGE:0.5:60:1008 RRA:AVERAGE:0.5:360:744 RRA:AVERAGE:0.5:2160:1460 > /dev/null &").arg(m_rrdPath.constData()).toUtf8());
     system(QString("rrdupdate %1/event.rrd %2:%3 > /dev/null &").arg(m_rrdPath.constData()).arg(time - time % 10).arg(m_eventCount).toUtf8());
 
-    if (time % 60 < 10)
-        qDebug() << QString("Clients: %1, used descriptors: %2").arg(clients).arg(QDir("/proc/self/fd").count() - 2);
+    if (clients != m_clientCount || descriptors != m_descriptorCount)
+    {
+        qDebug() << QString("Clients: %1, used descriptors: %2").arg(clients).arg(descriptors);
+        m_clientCount = clients;
+        m_descriptorCount = descriptors;
+    }
 
     m_apiCount = 0;
     m_eventCount = 0;

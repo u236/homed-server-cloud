@@ -85,7 +85,7 @@ private:
 
     bool m_debug;
     QByteArray m_path, m_clientId, m_clientSecret, m_skillId, m_skillToken, m_botToken, m_botSecret, m_rrdPath;
-    quint32 m_apiCount, m_eventCount;
+    quint32 m_apiCount, m_eventCount, m_clientCount, m_descriptorCount;
 
     QMap <qint64, User> m_users;
     QMap <QByteArray, User> m_codes;
