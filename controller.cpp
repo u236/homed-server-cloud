@@ -27,6 +27,7 @@ Controller::Controller(QObject *parent) : QObject(parent), m_db(QSqlDatabase::ad
     m_clientSecret = QByteArray::fromHex(m_settings->value("client/secret").toByteArray());
     m_skillId = m_settings->value("skill/id").toByteArray();
     m_skillToken = m_settings->value("skill/token").toByteArray();
+    m_botHost = m_settings->value("bot/host", "api.telegram.org").toByteArray();
     m_botToken = m_settings->value("bot/token").toByteArray();
     m_botSecret = m_settings->value("bot/secret").toByteArray();
     m_rrdPath = m_settings->value("rrd/path").toByteArray();
@@ -277,7 +278,7 @@ void Controller::requestReceived(Request &request)
             if (!message.isEmpty())
             {
                 QJsonObject json = {{"chat_id", id}, {"parse_mode", "Markdown"}, {"text", message}};
-                system(QString("curl --http1.1 -m 5 -X POST -H 'Content-Type: application/json' -d '%1' -s https://api.telegram.org/bot%2/sendMessage > /dev/null &").arg(QJsonDocument(json).toJson(QJsonDocument::Compact), m_botToken).toUtf8().constData());
+                system(QString("curl --http1.1 -m 5 -X POST -H 'Content-Type: application/json' -d '%1' -s https://%2/bot%3/sendMessage > /dev/null &").arg(QJsonDocument(json).toJson(QJsonDocument::Compact), m_botHost, m_botToken).toUtf8().constData());
             }
         }
 
