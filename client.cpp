@@ -14,7 +14,7 @@ Client::Client(QTcpSocket *socket) : QObject(nullptr), m_socket(socket), m_timer
     setsockopt(descriptor, SOL_TCP, TCP_KEEPINTVL, &interval, sizeof(interval));
     setsockopt(descriptor, SOL_TCP, TCP_KEEPCNT, &count, sizeof(count));
 
-    m_types = {"zigbee", "modbus", "custom"};
+    m_types = {"zigbee", "matter", "modbus", "custom", "ble"};
     m_socket->setParent(this);
 
     connect(m_socket, &QTcpSocket::readyRead, this, &Client::readyRead);
@@ -363,9 +363,10 @@ void Client::parseData(QByteArray &buffer)
 
                 switch (m_types.indexOf(type))
                 {
-                    case 0: id = item.value("ieeeAddress").toString(); break;                                                  // zigbee
-                    case 1: id = QString("%1.%2").arg(item.value("portId").toInt()).arg(item.value("slaveId").toInt()); break; // modbus
-                    case 2: id = item.value("id").toString(); break;                                                           // custom
+                    case 0:  id = item.value("ieeeAddress").toString(); break;                                                  // zigbee
+                    case 1:  id = item.value("nodeId").toString(); break;                                                       // matter
+                    case 2:  id = QString("%1.%2").arg(item.value("portId").toInt()).arg(item.value("slaveId").toInt()); break; // modbus
+                    default: id = item.value("id").toString(); break;
                 }
 
                 key = QString("%1/%2").arg(type, id);
