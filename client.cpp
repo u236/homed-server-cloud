@@ -14,7 +14,9 @@ Client::Client(QTcpSocket *socket) : QObject(nullptr), m_socket(socket), m_timer
     setsockopt(descriptor, SOL_TCP, TCP_KEEPINTVL, &interval, sizeof(interval));
     setsockopt(descriptor, SOL_TCP, TCP_KEEPCNT, &count, sizeof(count));
 
-    m_types = {"zigbee", "matter", "modbus", "custom", "ble"};
+    m_coreServices = {"automation", "cloud", "recorder", "web"};
+    m_deviceServices = {"zigbee", "matter", "modbus"};
+
     m_socket->setParent(this);
 
     connect(m_socket, &QTcpSocket::readyRead, this, &Client::readyRead);
@@ -350,7 +352,7 @@ void Client::parseData(QByteArray &buffer)
             QJsonArray devices = message.value("devices").toArray();
             bool names = message.value("names").toBool(), check = false;
 
-            if (!m_types.contains(type))
+            if (m_coreServices.contains(type))
                 return;
 
             for (auto it = devices.begin(); it != devices.end(); it++)
@@ -361,7 +363,7 @@ void Client::parseData(QByteArray &buffer)
                 if (name.isEmpty() || item.value("removed").toBool() || !item.value("cloud").toBool(true) || name == "HOMEd Coordinator")
                     continue;
 
-                switch (m_types.indexOf(type))
+                switch (m_deviceServices.indexOf(type))
                 {
                     case 0:  id = item.value("ieeeAddress").toString(); break;                                                  // zigbee
                     case 1:  id = item.value("nodeId").toString(); break;                                                       // matter

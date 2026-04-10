@@ -128,7 +128,7 @@ private:
     Status m_status;
     QString m_uniqueId;
 
-    QList <QString> m_types;
+    QList <QString> m_coreServices, m_deviceServices;
     QMap <QString, Device> m_devices;
 
     Device findDevice(const QString &search);
