@@ -108,20 +108,23 @@ void Client::parseExposes(const Endpoint &endpoint)
 
     if (endpoint->exposes().contains("thermostat"))
     {
-        QList <QVariant> list = endpoint->options().value("systemMode").toMap().value("enum").toList();
+        QList <QVariant> systemModeList = endpoint->options().value("systemMode").toMap().value("enum").toList(), fanModeList = endpoint->options().value("fanMode").toMap().value("enum").toList();
         Capabilities::ThermostatPower *power = nullptr;
 
         endpoint->setType("devices.types.thermostat");
 
-        if (list.contains("off"))
+        if (systemModeList.contains("off"))
         {
-            list.removeAll("off");
-            power = new Capabilities::ThermostatPower(list.value(0));
+            systemModeList.removeAll("off");
+            power = new Capabilities::ThermostatPower(systemModeList.value(0));
             endpoint->capabilities().append(Capability(power));
         }
 
-        if (!list.isEmpty())
-            endpoint->capabilities().append(Capability(new Capabilities::ThermostatMode(list, power)));
+        if (!systemModeList.isEmpty())
+            endpoint->capabilities().append(Capability(new Capabilities::ThermostatMode(systemModeList, power)));
+
+        if (!fanModeList.isEmpty())
+            endpoint->capabilities().append(Capability(new Capabilities::FanMode(fanModeList)));
 
         endpoint->capabilities().append(Capability(new Capabilities::Temperature(endpoint->options())));
         endpoint->properties().insert("temperature", Property(new Properties::Temperature));
