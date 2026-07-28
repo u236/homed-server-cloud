@@ -359,7 +359,7 @@ QJsonObject Capabilities::HeatMode::action(const QJsonObject &json)
 
 Capabilities::SwingMode::SwingMode(const QList <QVariant> &list) : CapabilityObject("devices.capabilities.mode", "swing")
 {
-    QList <QVariant> check = {"stationary", "horizontal", "vertical"}, modes;
+    QList <QVariant> check = {"auto", "off", "horizontal", "vertical"}, modes;
 
     for (int i = 0; i < list.count(); i++)
     {
@@ -368,7 +368,7 @@ Capabilities::SwingMode::SwingMode(const QList <QVariant> &list) : CapabilityObj
         if (!check.contains(value))
             continue;
 
-        modes.append(QMap <QString, QVariant> {{"value", value}});
+        modes.append(QMap <QString, QVariant> {{"value", value != "off" ? value : "stationary"}});
     }
 
     m_parameters.insert("instance", "swing");
@@ -379,12 +379,14 @@ Capabilities::SwingMode::SwingMode(const QList <QVariant> &list) : CapabilityObj
 
 QJsonObject Capabilities::SwingMode::state(void)
 {
-    return QJsonObject {{"instance", "swing"}, {"value", m_data.value("swingMode").toString()}};
+    QString value = m_data.value("swingMode").toString();
+    return {{"instance", "swing"}, {"value", value != "off" ? QJsonValue::fromVariant(value) : "stationary"}};
 }
 
 QJsonObject Capabilities::SwingMode::action(const QJsonObject &json)
 {
-    return {{"swingMode", json.value("value").toString()}};
+    QString value = json.value("value").toString();
+    return {{"swingMode", value != "stationary" ? value : "off"}};
 }
 
 Properties::Button::Button(const QList <QVariant> &actions) : PropertyObject("devices.properties.event", "button")

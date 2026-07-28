@@ -276,7 +276,7 @@ void Client::parseExposes(const Endpoint &endpoint)
     if (endpoint->type().isEmpty())
         return;
 
-    if (endpoint->exposes().contains("fanMode"))
+    if (!endpoint->exposes().contains("thermostat") && endpoint->exposes().contains("fanMode"))
         endpoint->capabilities().append(Capability(new Capabilities::FanMode(endpoint->options().value("fanMode").toMap().value("enum").toList())));
 
     if (endpoint->exposes().contains("heatMode"))
