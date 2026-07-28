@@ -487,8 +487,9 @@ void Client::parseData(QByteArray &buffer)
         }
         else if (topic.startsWith("fd/"))
         {
-            const Device &device = findDevice(topic.mid(topic.indexOf('/') + 1));
             QMap <QString, QVariant> data = message.toVariantMap();
+            QString string = topic.mid(topic.indexOf('/') + 1);
+            const Device &device = findDevice(string);
 
             if (device.isNull())
                 return;
@@ -496,7 +497,7 @@ void Client::parseData(QByteArray &buffer)
             for (auto it = data.begin(); it != data.end(); it++)
             {
                 QList <QString> itemList = it.key().split('_');
-                Endpoint endpoint = device->endpoints().value(static_cast <quint8> (itemList.count() > 1 ? itemList.value(1).toInt() : topic.split('/').last().toInt()));
+                Endpoint endpoint = device->endpoints().value(static_cast <quint8> (itemList.count() > 1 ? itemList.value(1).toInt() : string.mid(device->topic().length() + 1).toInt()));
 
                 if (!endpoint.isNull())
                 {
