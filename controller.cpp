@@ -510,8 +510,9 @@ void Controller::requestReceived(Request &request)
 
                         if (it.value()->id())
                         {
+                            QString endpointName = endpoint->options().value("name").toString();
                             id.append(QString("/%1").arg(it.value()->id()));
-                            name.append(QString(" %1").arg(it.value()->id()));
+                            name.append(QString(" %1").arg(!endpointName.isEmpty() ? endpointName : QString::number(it.value()->id())));
                         }
 
                         if (!device->description().isEmpty())
