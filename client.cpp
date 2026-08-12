@@ -426,15 +426,20 @@ void Client::parseData(QByteArray &buffer)
             {
                 QJsonObject json = it.value().toObject(), options = json.value("options").toObject();
                 QJsonArray items = json.value("items").toArray();
+                int endpointId = it.key().toInt();
+
+                if (items.isEmpty() || (it.key() != "common" && (endpointId < 1 || endpointId > 255)))
+                    continue;
 
                 for (int i = 0; i < items.count(); i++)
                 {
-                    QString item = items.at(i).toString(), subscription = QString("fd/").append(device->topic()), expose;
-                    QList <QString> itemList = item.split('_');
-                    quint8 id = static_cast <quint8> (itemList.count() > 1 ? itemList.value(1).toInt() : it.key().toInt());
+                    QList <QString> itemList = items.at(i).toString().split('_');
+                    QString expose = itemList.value(0), subscription = QString("fd/").append(device->topic());
+                    quint8 id = static_cast <quint8> (itemList.count() > 1 ? itemList.value(1).toInt() : endpointId);
                     Endpoint endpoint = device->endpoints().value(id);
 
-                    expose = itemList.value(0);
+                    if (expose.isEmpty())
+                        continue;
 
                     if (endpoint.isNull())
                     {
