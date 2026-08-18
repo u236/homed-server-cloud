@@ -31,10 +31,28 @@ Controller::Controller(QObject *parent) : QObject(parent), m_db(QSqlDatabase::ad
     m_botToken = m_settings->value("bot/token").toByteArray();
     m_botSecret = m_settings->value("bot/secret").toByteArray();
     m_rrdPath = m_settings->value("rrd/path").toByteArray();
+    m_userLogin = m_settings->value("user/login").toByteArray();
+    m_userPassword = m_settings->value("user/password").toByteArray();
 
     m_aes->init(m_clientSecret, QCryptographicHash::hash(m_clientSecret, QCryptographicHash::Md5));
-    query.exec("SELECT chat, name, hash, clientToken, accessToken, refreshToken, tokenExpire FROM users");
-
+    bool b = query.exec("SELECT chat, name, hash, clientToken, accessToken, refreshToken, tokenExpire FROM users");
+    if (!b) {
+        b = query.exec("CREATE TABLE users (chat INTEGER PRIMARY KEY, name TEXT, hash TEXT, clientToken TEXT, accessToken TEXT, refreshToken TEXT, tokenExpire INTEGER,  timestamp INTEGER);");
+        if (!b) {
+            qWarning() << "Database query error" << m_db.lastError().text();
+        }
+    }
+    if(!m_userLogin.isEmpty()){
+        bool su = query.exec(QString("SELECT chat, name, hash, clientToken, accessToken, refreshToken, tokenExpire FROM users WHERE name='%1'").arg(m_userLogin.constData()));
+        if(!su) {
+            QByteArray salt = randomData(16);
+            b=query.exec(QString("INSERT INTO users (name, hash, clientToken, timestamp) VALUES ('%2', '%3', '%4', %5) ON CONFLICT (name) DO UPDATE SET name = excluded.name, hash = excluded.hash, clientToken = excluded.clientToken, accessToken = NULL, refreshToken = NULL, tokenExpire = NULL, timestamp = excluded.timestamp").arg(m_userLogin.constData(), salt.toHex().append(QCryptographicHash::hash(QByteArray(salt).append(m_userPassword), QCryptographicHash::Md5).toHex()), randomData(32).toHex()).arg(QDateTime::currentSecsSinceEpoch()));
+            if(!b) {
+                qWarning() << "Database query error | insert single user" << m_db.lastError().text();
+            }
+            b = query.exec("SELECT chat, name, hash, clientToken, accessToken, refreshToken, tokenExpire FROM users");
+        }
+    }
     while (query.next())
     {
         qint64 id = query.value(0).toLongLong();
@@ -158,7 +176,7 @@ void Controller::updateStats(void)
 
 void Controller::requestReceived(Request &request)
 {
-    if (request.url() == "/telegram")
+    if (!m_botSecret.isEmpty() && request.url() == "/telegram")
     {
         QJsonObject json = QJsonDocument::fromJson(request.body().toUtf8()).object().value("message").toObject(), chat = json.value("chat").toObject(), from = json.value("from").toObject();
 
