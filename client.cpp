@@ -108,7 +108,7 @@ void Client::parseExposes(const Endpoint &endpoint)
 
     if (endpoint->exposes().contains("thermostat"))
     {
-        QList <QVariant> systemModeList = endpoint->options().value("systemMode").toMap().value("enum").toList(), fanModeList = endpoint->options().value("fanMode").toMap().value("enum").toList();
+        QList <QVariant> systemModeList = endpoint->options().value("systemMode").toMap().value("enum").toList(), fanModeList = endpoint->options().value("fanMode").toMap().value("enum").toList(), swingModeList = endpoint->options().value("swingMode").toMap().value("enum").toList();
         Capabilities::ThermostatPower *power = nullptr;
 
         endpoint->setType("devices.types.thermostat");
@@ -125,6 +125,9 @@ void Client::parseExposes(const Endpoint &endpoint)
 
         if (!fanModeList.isEmpty())
             endpoint->capabilities().append(Capability(new Capabilities::FanMode(fanModeList)));
+
+        if (!swingModeList.isEmpty())
+            endpoint->capabilities().append(Capability(new Capabilities::SwingMode(swingModeList)));
 
         endpoint->capabilities().append(Capability(new Capabilities::Temperature(endpoint->options())));
         endpoint->properties().insert("temperature", Property(new Properties::Temperature));
@@ -279,11 +282,11 @@ void Client::parseExposes(const Endpoint &endpoint)
     if (!endpoint->exposes().contains("thermostat") && endpoint->exposes().contains("fanMode"))
         endpoint->capabilities().append(Capability(new Capabilities::FanMode(endpoint->options().value("fanMode").toMap().value("enum").toList())));
 
+    if (!endpoint->exposes().contains("thermostat") && endpoint->exposes().contains("swingMode"))
+        endpoint->capabilities().append(Capability(new Capabilities::SwingMode(endpoint->options().value("swingMode").toMap().value("enum").toList())));
+
     if (endpoint->exposes().contains("heatMode"))
         endpoint->capabilities().append(Capability(new Capabilities::HeatMode(endpoint->options().value("heatMode").toMap().value("enum").toList())));
-
-    if (endpoint->exposes().contains("swingMode"))
-        endpoint->capabilities().append(Capability(new Capabilities::SwingMode(endpoint->options().value("swingMode").toMap().value("enum").toList())));
 
     if (endpoint->exposes().contains("battery"))
         endpoint->properties().insert("battery", Property(new Properties::Battery));
