@@ -108,7 +108,7 @@ void Client::parseExposes(const Endpoint &endpoint)
 
     if (endpoint->exposes().contains("thermostat"))
     {
-        QList <QVariant> systemModeList = endpoint->options().value("systemMode").toMap().value("enum").toList(), fanModeList = endpoint->options().value("fanMode").toMap().value("enum").toList(), swingModeList = endpoint->options().value("swingMode").toMap().value("enum").toList();
+        QList <QVariant> systemModeList = endpoint->options().value("systemMode").toMap().value("enum").toList(), fanModeList = endpoint->options().value("fanMode").toMap().value("enum").toList(), swingModeList = endpoint->options().value("swingMode").toMap().value("enum").toList(), heatModeList = endpoint->options().value("heatMode").toMap().value("enum").toList();
         Capabilities::ThermostatPower *power = nullptr;
 
         endpoint->setType("devices.types.thermostat");
@@ -128,6 +128,9 @@ void Client::parseExposes(const Endpoint &endpoint)
 
         if (!swingModeList.isEmpty())
             endpoint->capabilities().append(Capability(new Capabilities::SwingMode(swingModeList)));
+
+        if (!heatModeList.isEmpty())
+            endpoint->capabilities().append(Capability(new Capabilities::HeatMode(heatModeList)));
 
         endpoint->capabilities().append(Capability(new Capabilities::Temperature(endpoint->options())));
         endpoint->properties().insert("temperature", Property(new Properties::Temperature));
@@ -285,7 +288,7 @@ void Client::parseExposes(const Endpoint &endpoint)
     if (!endpoint->exposes().contains("thermostat") && endpoint->exposes().contains("swingMode"))
         endpoint->capabilities().append(Capability(new Capabilities::SwingMode(endpoint->options().value("swingMode").toMap().value("enum").toList())));
 
-    if (endpoint->exposes().contains("heatMode"))
+    if (!endpoint->exposes().contains("thermostat") && endpoint->exposes().contains("heatMode"))
         endpoint->capabilities().append(Capability(new Capabilities::HeatMode(endpoint->options().value("heatMode").toMap().value("enum").toList())));
 
     if (endpoint->exposes().contains("battery"))
