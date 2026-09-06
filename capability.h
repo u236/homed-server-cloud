@@ -222,6 +222,54 @@ namespace Capabilities
         QJsonObject action(const QJsonObject &json) override;
 
     };
+
+    class Range : public CapabilityObject
+    {
+
+    public:
+
+        Range(const QString &expose, const QString &instance, double min, double max, const QString &unit);
+        QJsonObject state(void) override;
+        QJsonObject action(const QJsonObject &json) override;
+
+    private:
+
+        QString m_expose;
+
+    };
+
+    class Mode : public CapabilityObject
+    {
+
+    public:
+
+        Mode(const QString &expose, const QString &instance, const QList <QVariant> &enumValues);
+        QJsonObject state(void) override;
+        QJsonObject action(const QJsonObject &json) override;
+
+    private:
+
+        QString m_expose;
+        QList <QVariant> m_enumValues;
+
+        static const QStringList m_ordinals;
+
+    };
+
+    class Toggle : public CapabilityObject
+    {
+
+    public:
+
+        Toggle(const QString &expose, const QString &instance);
+        QJsonObject state(void) override;
+        QJsonObject action(const QJsonObject &json) override;
+
+    private:
+
+        QString m_expose;
+
+    };
 };
 
 namespace Properties

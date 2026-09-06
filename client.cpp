@@ -133,6 +133,29 @@ void Client::parseExposes(const Endpoint &endpoint)
         endpoint->properties().insert("temperature", Property(new Properties::Temperature));
     }
 
+    if (endpoint->exposes().contains("media"))
+    {
+        QList <QVariant> list = endpoint->options().value("media").toList();
+
+        endpoint->setType("devices.types.media_device");
+        endpoint->capabilities().append(Capability(new Capabilities::Switch));
+
+        if (list.contains("volume"))
+        {
+            QMap <QString, QVariant> option = endpoint->options().value("volume").toMap();
+            endpoint->capabilities().append(Capability(new Capabilities::Range("volume", "volume", option.value("min").toDouble(), option.value("max").toDouble(), option.value("unit").toString())));
+        }
+
+        if (list.contains("input"))
+            endpoint->capabilities().append(Capability(new Capabilities::Mode("input", "input_source", endpoint->options().value("input").toMap().value("enum").toList())));
+
+        if (list.contains("mute"))
+            endpoint->capabilities().append(Capability(new Capabilities::Toggle("mute", "mute")));
+
+        if (list.contains("pause"))
+            endpoint->capabilities().append(Capability(new Capabilities::Toggle("pause", "pause")));
+    }
+
     // event
 
     if (endpoint->exposes().contains("action"))
