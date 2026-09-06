@@ -389,6 +389,75 @@ QJsonObject Capabilities::SwingMode::action(const QJsonObject &json)
     return {{"swingMode", value != "stationary" ? value : "off"}};
 }
 
+Capabilities::Range::Range(const QString &expose, const QString &instance, double min, double max, const QString &unit) : CapabilityObject("devices.capabilities.range", instance), m_expose(expose), m_min(min), m_max(max)
+{
+    m_parameters.insert("instance", instance);
+    m_parameters.insert("range", QMap <QString, QVariant> {{"min", min}, {"max", max}});
+
+    if (!unit.isEmpty())
+        m_parameters.insert("unit", unit);
+
+    m_data.insert(expose, QVariant());
+}
+
+QJsonObject Capabilities::Range::state(void)
+{
+    return QJsonObject {{"instance", m_instances.value(0)}, {"value", m_data.value(m_expose).toDouble()}};
+}
+
+QJsonObject Capabilities::Range::action(const QJsonObject &json)
+{
+    double value = json.value("value").toDouble();
+
+    if (json.value("relative").toBool())
+        value += m_data.value(m_expose).toDouble();
+
+    return {{m_expose, value < m_min ? m_min : value > m_max ? m_max : value}};
+}
+
+const QStringList Capabilities::Mode::m_ordinals = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"};
+
+Capabilities::Mode::Mode(const QString &expose, const QString &instance, const QList <QVariant> &enumValues) : CapabilityObject("devices.capabilities.mode", instance), m_expose(expose), m_enumValues(enumValues.mid(0, 10))
+{
+    QList <QVariant> modes;
+
+    for (int i = 0; i < m_enumValues.count(); i++)
+        modes.append(QMap <QString, QVariant> {{"value", m_ordinals.value(i)}});
+
+    m_parameters.insert("instance", instance);
+    m_parameters.insert("modes", modes);
+
+    m_data.insert(expose, QVariant());
+}
+
+QJsonObject Capabilities::Mode::state(void)
+{
+    int index = m_enumValues.indexOf(m_data.value(m_expose));
+    return {{"instance", m_instances.value(0)}, {"value", m_ordinals.value(index >= 0 ? index : 0)}};
+}
+
+QJsonObject Capabilities::Mode::action(const QJsonObject &json)
+{
+    int index = m_ordinals.indexOf(json.value("value").toString());
+    return {{m_expose, index >= 0 ? m_enumValues.value(index) : QVariant()}};
+}
+
+Capabilities::Toggle::Toggle(const QString &expose, const QString &instance) : CapabilityObject("devices.capabilities.toggle", instance), m_expose(expose)
+{
+    m_parameters.insert("instance", instance);
+    m_data.insert(expose, QVariant());
+}
+
+QJsonObject Capabilities::Toggle::state(void)
+{
+    return {{"instance", m_instances.value(0)}, {"value", m_data.value(m_expose).toBool()}};
+}
+
+QJsonObject Capabilities::Toggle::action(const QJsonObject &json)
+{
+    return {{m_expose, json.value("value").toBool()}};
+}
+
 Properties::Button::Button(const QList <QVariant> &actions) : PropertyObject("devices.properties.event", "button")
 {
     if (actions.contains("singleClick"))
