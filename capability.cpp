@@ -389,7 +389,7 @@ QJsonObject Capabilities::SwingMode::action(const QJsonObject &json)
     return {{"swingMode", value != "stationary" ? value : "off"}};
 }
 
-Capabilities::Range::Range(const QString &expose, const QString &instance, double min, double max, const QString &unit) : CapabilityObject("devices.capabilities.range", instance), m_expose(expose)
+Capabilities::Range::Range(const QString &expose, const QString &instance, double min, double max, const QString &unit) : CapabilityObject("devices.capabilities.range", instance), m_expose(expose), m_min(min), m_max(max)
 {
     m_parameters.insert("instance", instance);
     m_parameters.insert("range", QMap <QString, QVariant> {{"min", min}, {"max", max}});
@@ -412,7 +412,7 @@ QJsonObject Capabilities::Range::action(const QJsonObject &json)
     if (json.value("relative").toBool())
         value += m_data.value(m_expose).toDouble();
 
-    return {{m_expose, value}};
+    return {{m_expose, value < m_min ? m_min : value > m_max ? m_max : value}};
 }
 
 const QStringList Capabilities::Mode::m_ordinals = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"};
@@ -433,7 +433,7 @@ Capabilities::Mode::Mode(const QString &expose, const QString &instance, const Q
 QJsonObject Capabilities::Mode::state(void)
 {
     int index = m_enumValues.indexOf(m_data.value(m_expose));
-    return {{"instance", m_instances.value(0)}, {"value", index >= 0 ? m_ordinals.value(index) : QVariant()}};
+    return {{"instance", m_instances.value(0)}, {"value", m_ordinals.value(index >= 0 ? index : 0)}};
 }
 
 QJsonObject Capabilities::Mode::action(const QJsonObject &json)

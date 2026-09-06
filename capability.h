@@ -235,6 +235,7 @@ namespace Capabilities
     private:
 
         QString m_expose;
+        double m_min, m_max;
 
     };
 

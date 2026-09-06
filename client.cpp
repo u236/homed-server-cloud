@@ -147,7 +147,12 @@ void Client::parseExposes(const Endpoint &endpoint)
         }
 
         if (list.contains("input"))
-            endpoint->capabilities().append(Capability(new Capabilities::Mode("input", "input_source", endpoint->options().value("input").toMap().value("enum").toList())));
+        {
+            QList <QVariant> inputList = endpoint->options().value("input").toMap().value("enum").toList();
+
+            if (!inputList.isEmpty())
+                endpoint->capabilities().append(Capability(new Capabilities::Mode("input", "input_source", inputList)));
+        }
 
         if (list.contains("mute"))
             endpoint->capabilities().append(Capability(new Capabilities::Toggle("mute", "mute")));
