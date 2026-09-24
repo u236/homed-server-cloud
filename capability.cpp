@@ -389,73 +389,95 @@ QJsonObject Capabilities::SwingMode::action(const QJsonObject &json)
     return {{"swingMode", value != "stationary" ? value : "off"}};
 }
 
-Capabilities::Range::Range(const QString &expose, const QString &instance, double min, double max, const QString &unit) : CapabilityObject("devices.capabilities.range", instance), m_expose(expose), m_min(min), m_max(max)
+Capabilities::Input::Input(const QList <QVariant> &list) : CapabilityObject("devices.capabilities.mode", "input_source")
 {
-    m_parameters.insert("instance", instance);
-    m_parameters.insert("range", QMap <QString, QVariant> {{"min", min}, {"max", max}});
+    QList <QVariant> check = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"}, modes;
 
-    if (!unit.isEmpty())
-        m_parameters.insert("unit", unit);
+    for (int i = 0; i < list.count() && i < check.count(); i++)
+    {
+        modes.append(QMap <QString, QVariant> {{"value", check.at(i)}});
+        m_map.insert(check.at(i).toString(), list.at(i).toString());
+    }
 
-    m_data.insert(expose, QVariant());
-}
-
-QJsonObject Capabilities::Range::state(void)
-{
-    return QJsonObject {{"instance", m_instances.value(0)}, {"value", m_data.value(m_expose).toDouble()}};
-}
-
-QJsonObject Capabilities::Range::action(const QJsonObject &json)
-{
-    double value = json.value("value").toDouble();
-
-    if (json.value("relative").toBool())
-        value += m_data.value(m_expose).toDouble();
-
-    return {{m_expose, value < m_min ? m_min : value > m_max ? m_max : value}};
-}
-
-const QStringList Capabilities::Mode::m_ordinals = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"};
-
-Capabilities::Mode::Mode(const QString &expose, const QString &instance, const QList <QVariant> &enumValues) : CapabilityObject("devices.capabilities.mode", instance), m_expose(expose), m_enumValues(enumValues.mid(0, 10))
-{
-    QList <QVariant> modes;
-
-    for (int i = 0; i < m_enumValues.count(); i++)
-        modes.append(QMap <QString, QVariant> {{"value", m_ordinals.value(i)}});
-
-    m_parameters.insert("instance", instance);
+    m_parameters.insert("instance", "input_source");
     m_parameters.insert("modes", modes);
 
-    m_data.insert(expose, QVariant());
+    m_data.insert("input", QVariant());
 }
 
-QJsonObject Capabilities::Mode::state(void)
+QJsonObject Capabilities::Input::state(void)
 {
-    int index = m_enumValues.indexOf(m_data.value(m_expose));
-    return {{"instance", m_instances.value(0)}, {"value", m_ordinals.value(index >= 0 ? index : 0)}};
+    QString value = m_data.value("input").toString(), mode = "one";
+
+    for (auto it = m_map.begin(); it != m_map.end(); it++)
+    {
+        if (it.value() != value)
+            continue;
+
+        mode = it.key();
+        break;
+    }
+
+    return QJsonObject {{"instance", "input_source"}, {"value", mode}};
 }
 
-QJsonObject Capabilities::Mode::action(const QJsonObject &json)
+QJsonObject Capabilities::Input::action(const QJsonObject &json)
 {
-    int index = m_ordinals.indexOf(json.value("value").toString());
-    return {{m_expose, index >= 0 ? m_enumValues.value(index) : QVariant()}};
+    return {{"input", m_map.value(json.value("value").toString())}};
 }
 
-Capabilities::Toggle::Toggle(const QString &expose, const QString &instance) : CapabilityObject("devices.capabilities.toggle", instance), m_expose(expose)
+Capabilities::Volume::Volume(const QMap <QString, QVariant> &options) : CapabilityObject("devices.capabilities.range", "volume")
 {
-    m_parameters.insert("instance", instance);
-    m_data.insert(expose, QVariant());
+    QMap <QString, QVariant> option = options.value("volume").toMap();
+
+    m_parameters.insert("instance", "volume");
+    m_parameters.insert("range", QMap <QString, QVariant> {{"min", option.value("min").toDouble()}, {"max", option.value("max").toDouble()}, {"precision", option.value("step", 1).toDouble()}});
+    m_parameters.insert("unit", "unit.percent");
+
+    m_data.insert("volume", QVariant());
 }
 
-QJsonObject Capabilities::Toggle::state(void)
+QJsonObject Capabilities::Volume::state(void)
 {
-    return {{"instance", m_instances.value(0)}, {"value", m_data.value(m_expose).toBool()}};
+    return QJsonObject {{"instance", "volume"}, {"value", m_data.value("volume").toDouble()}};
 }
 
-QJsonObject Capabilities::Toggle::action(const QJsonObject &json)
+QJsonObject Capabilities::Volume::action(const QJsonObject &json)
 {
-    return {{m_expose, json.value("value").toBool()}};
+    double value = json.value("value").toDouble();
+    return {{"volume", json.value("relative").toBool() ? m_data.value("volume").toDouble() + value : value}};
+}
+
+Capabilities::Mute::Mute(void) : CapabilityObject("devices.capabilities.toggle", "mute")
+{
+    m_parameters.insert("instance", "mute");
+    m_data.insert("mute", QVariant());
+}
+
+QJsonObject Capabilities::Mute::state(void)
+{
+    return {{"instance", "mute"}, {"value", m_data.value("mute").toBool()}};
+}
+
+QJsonObject Capabilities::Mute::action(const QJsonObject &json)
+{
+    return {{"mute", json.value("value").toBool()}};
+}
+
+Capabilities::Pause::Pause(void) : CapabilityObject("devices.capabilities.toggle", "pause")
+{
+    m_parameters.insert("instance", "pause");
+    m_data.insert("pause", QVariant());
+}
+
+QJsonObject Capabilities::Pause::state(void)
+{
+    return {{"instance", "pause"}, {"value", m_data.value("pause").toBool()}};
+}
+
+QJsonObject Capabilities::Pause::action(const QJsonObject &json)
+{
+    return {{"pause", json.value("value").toBool()}};
 }
 
 Properties::Button::Button(const QList <QVariant> &actions) : PropertyObject("devices.properties.event", "button")
