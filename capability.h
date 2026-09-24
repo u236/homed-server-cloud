@@ -222,6 +222,55 @@ namespace Capabilities
         QJsonObject action(const QJsonObject &json) override;
 
     };
+
+    class Input : public CapabilityObject
+    {
+
+    public:
+
+        Input(const QList <QVariant> &list);
+        QJsonObject state(void) override;
+        QJsonObject action(const QJsonObject &json) override;
+
+    private:
+
+        QMap <QString, QString> m_map;
+
+    };
+
+    class Volume : public CapabilityObject
+    {
+
+    public:
+
+        Volume(const QMap <QString, QVariant> &options);
+        QJsonObject state(void) override;
+        QJsonObject action(const QJsonObject &json) override;
+
+    };
+
+    class Mute : public CapabilityObject
+    {
+
+    public:
+
+        Mute(void);
+        QJsonObject state(void) override;
+        QJsonObject action(const QJsonObject &json) override;
+
+    };
+
+    class Pause : public CapabilityObject
+    {
+
+    public:
+
+        Pause(void);
+        QJsonObject state(void) override;
+        QJsonObject action(const QJsonObject &json) override;
+
+    };
+
 };
 
 namespace Properties
