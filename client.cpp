@@ -63,7 +63,7 @@ void Client::close(void)
 Device Client::findDevice(const QString &search)
 {
     for (auto it = m_devices.begin(); it != m_devices.end(); it++)
-        if (search.startsWith(it.value()->key()) || search.startsWith(it.value()->topic()))
+        if (search == it.value()->key() || search.startsWith(it.value()->key().append('/')) || search == it.value()->topic() || search.startsWith(it.value()->topic().append('/')))
             return it.value();
 
     return Device();
@@ -425,7 +425,7 @@ void Client::parseData(QByteArray &buffer)
 
             for (auto it = m_devices.begin(); it != m_devices.end(); NULL)
             {
-                if (it.value()->topic().startsWith(service) && !map.contains(it.key()))
+                if (it.value()->topic().startsWith(QString("%1/").arg(service)) && !map.contains(it.key()))
                 {
                     it = m_devices.erase(it);
                     check = true;
