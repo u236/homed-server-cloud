@@ -26,7 +26,7 @@ class UserObject : public QObject
 
 public:
 
-    UserObject(void) : m_botStatus(BotStatus::Idle) {}
+    UserObject(void) : m_tokenExpire(0), m_botStatus(BotStatus::Idle) {}
 
     inline QByteArray name(void) { return m_name; }
     inline void setName(const QByteArray &value) { m_name = value; }
@@ -83,9 +83,9 @@ private:
     HTTP *m_http;
     AES128 *m_aes;
 
-    bool m_debug;
     QByteArray m_path, m_clientId, m_clientSecret, m_skillId, m_skillToken, m_botHost, m_botToken, m_botSecret, m_rrdPath;
     quint32 m_apiCount, m_eventCount, m_clientCount, m_descriptorCount;
+    bool m_debug, m_single;
 
     QMap <qint64, User> m_users;
     QMap <QByteArray, User> m_codes;

@@ -3,8 +3,9 @@
 #include <QRandomGenerator>
 #include "controller.h"
 
-Controller::Controller(QObject *parent) : QObject(parent), m_db(QSqlDatabase::addDatabase("QSQLITE")), m_settings(new QSettings("/etc/homed/homed-cloud-server.conf", QSettings::IniFormat, this)), m_codeTimer(new QTimer(this)), m_statsTimer(new QTimer(this)), m_server(new QTcpServer(this)), m_http(new HTTP(m_settings, this)), m_aes(new AES128), m_apiCount(0), m_eventCount(0), m_clientCount(0), m_descriptorCount(0)
+Controller::Controller(QObject *parent) : QObject(parent), m_db(QSqlDatabase::addDatabase("QSQLITE")), m_settings(new QSettings("/etc/homed/homed-cloud-server.conf", QSettings::IniFormat, this)), m_codeTimer(new QTimer(this)), m_statsTimer(new QTimer(this)), m_server(new QTcpServer(this)), m_http(new HTTP(m_settings, this)), m_aes(new AES128), m_apiCount(0), m_eventCount(0), m_clientCount(0), m_descriptorCount(0), m_single(false)
 {
+    QByteArray name = m_settings->value("user/name").toByteArray(), password = m_settings->value("user/password").toByteArray(), token = QByteArray::fromHex(m_settings->value("user/token").toByteArray());
     QSqlQuery query(m_db);
 
     if (!m_server->listen(QHostAddress::Any, static_cast <quint16> (m_settings->value("server/port", 8042).toInt())))
@@ -21,7 +22,6 @@ Controller::Controller(QObject *parent) : QObject(parent), m_db(QSqlDatabase::ad
         return;
     }
 
-    m_debug = m_settings->value("server/debug", false).toBool();
     m_path = m_settings->value("server/path").toByteArray();
     m_clientId = m_settings->value("client/id").toByteArray();
     m_clientSecret = QByteArray::fromHex(m_settings->value("client/secret").toByteArray());
@@ -31,23 +31,55 @@ Controller::Controller(QObject *parent) : QObject(parent), m_db(QSqlDatabase::ad
     m_botToken = m_settings->value("bot/token").toByteArray();
     m_botSecret = m_settings->value("bot/secret").toByteArray();
     m_rrdPath = m_settings->value("rrd/path").toByteArray();
+    m_debug = m_settings->value("server/debug", false).toBool();
 
     m_aes->init(m_clientSecret, QCryptographicHash::hash(m_clientSecret, QCryptographicHash::Md5));
-    query.exec("SELECT chat, name, hash, clientToken, accessToken, refreshToken, tokenExpire FROM users");
 
-    while (query.next())
+    if (name.isEmpty() || password.isEmpty() || token.isEmpty())
     {
-        qint64 id = query.value(0).toLongLong();
+        query.exec("SELECT chat, name, hash, clientToken, accessToken, refreshToken, tokenExpire FROM users");
+
+        while (query.next())
+        {
+            qint64 id = query.value(0).toLongLong();
+            User user(new UserObject);
+
+            user->setName(query.value(1).toByteArray());
+            user->setHash(query.value(2).toByteArray());
+            user->setClientToken(QByteArray::fromHex(query.value(3).toByteArray()));
+            user->setAccessToken(QByteArray::fromHex(query.value(4).toByteArray()));
+            user->setRefreshToken(QByteArray::fromHex(query.value(5).toByteArray()));
+            user->setTokenExpire(query.value(6).toLongLong());
+
+            m_users.insert(id, user);
+        }
+    }
+    else
+    {
+        QByteArray salt = randomData(16);
         User user(new UserObject);
 
-        user->setName(query.value(1).toByteArray());
-        user->setHash(query.value(2).toByteArray());
-        user->setClientToken(QByteArray::fromHex(query.value(3).toByteArray()));
-        user->setAccessToken(QByteArray::fromHex(query.value(4).toByteArray()));
-        user->setRefreshToken(QByteArray::fromHex(query.value(5).toByteArray()));
-        user->setTokenExpire(query.value(6).toLongLong());
+        query.exec("SELECT name, accessToken, refreshToken, tokenExpire FROM users WHERE chat = 0");
 
-        m_users.insert(id, user);
+        user->setName(name);
+        user->setHash(salt.toHex().append(QCryptographicHash::hash(QByteArray(salt).append(password), QCryptographicHash::Md5).toHex()));
+        user->setClientToken(token);
+
+        if (query.next() && query.value(0).toByteArray() == name)
+        {
+            user->setAccessToken(QByteArray::fromHex(query.value(1).toByteArray()));
+            user->setRefreshToken(QByteArray::fromHex(query.value(2).toByteArray()));
+            user->setTokenExpire(query.value(3).toLongLong());
+        }
+
+        if (!query.exec(QString("INSERT INTO users (chat, name, hash, clientToken, accessToken, refreshToken, tokenExpire, timestamp) VALUES (0, '%1', '%2', '%3', '%4', '%5', %6, %7) ON CONFLICT (chat) DO UPDATE SET name = excluded.name, hash = excluded.hash, clientToken = excluded.clientToken, accessToken = excluded.accessToken, refreshToken = excluded.refreshToken, tokenExpire = excluded.tokenExpire, timestamp = excluded.timestamp").arg(user->name(), user->hash(), user->clientToken().toHex(), user->accessToken().toHex(), user->refreshToken().toHex()).arg(user->tokenExpire()).arg(QDateTime::currentSecsSinceEpoch())))
+        {
+            qWarning() << "Database query error" << query.lastError().text();
+            return;
+        }
+
+        m_single = true;
+        m_users.insert(0, user);
     }
 
     connect(m_codeTimer, &QTimer::timeout, this, &Controller::clearCodes);
@@ -158,7 +190,7 @@ void Controller::updateStats(void)
 
 void Controller::requestReceived(Request &request)
 {
-    if (request.url() == "/telegram")
+    if (request.url() == "/telegram" && !m_single)
     {
         QJsonObject json = QJsonDocument::fromJson(request.body().toUtf8()).object().value("message").toObject(), chat = json.value("chat").toObject(), from = json.value("from").toObject();
 
